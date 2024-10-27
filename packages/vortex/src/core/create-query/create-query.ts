@@ -13,9 +13,10 @@ const createInitial = () => ({
 export const createQuery = <Data, TError, TOptions>(
   asyncFn: (options: TOptions) => Promise<Data>,
   context: ReactiveContext,
-  options: QueryOptions = { isAutorun: false },
+  options?: QueryOptions<Data, TError>,
 ): Query<Data, TError, TOptions> => {
   let lastOptions: TOptions;
+  const { isAutorun = false, onError, onSuccess } = options || {};
 
   const state = createReactive<QueryData<Data, TError>>(
     createInitial(),
@@ -49,12 +50,14 @@ export const createQuery = <Data, TError, TOptions>(
       const result = await asyncFn(runOptions);
 
       setSuccess(result);
+      onSuccess?.(result);
     } catch (err) {
       setError(err as TError);
+      onError?.(err as TError);
     }
   };
 
-  if (options.isAutorun) {
+  if (isAutorun) {
     run(undefined as TOptions);
   }
 

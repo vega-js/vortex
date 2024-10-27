@@ -83,6 +83,10 @@ Creates a computed property that updates when its dependencies change.
 
 Defines a reactive effect that runs when its dependencies change.
 
+### `query(fn, options)`
+
+Defines a reactive query.
+
 ### `DIContainer`
 
 A container for managing dependencies, allowing you to inject external services into your store.
@@ -485,6 +489,70 @@ const store = defineStore(({ reactive, effect }) => {
 **Note**  
 This pattern can be useful when you need to react to certain state changes conditionally.
 
+### 14. Perfect async request handling
+
+This example shows how to conditionally trigger effects based on reactive state.
+
+```typescript jsx
+import { DIContainer, defineStore, useStore } from '@vegajs/vortex';
+
+class MyRepository {
+    public getFoo() {
+        return Promise.resolve('foo');
+    }
+
+    public getBar() {
+        return Promise.resolve('foo');
+    }
+}
+
+const container = new DIContainer<{ myRepo: MyRepository }>();
+
+container.register('myRepo', new MyRepository());
+
+const fooBarStore = defineStore(
+    ({ DI, query }) => {
+        const repo = DI.get('myRepo');
+
+        const fooQuery = query<string, string>(() => repo.getFoo(), {
+            isAutorun: true, // for auth run repo.getFoo
+            onSuccess(data) {
+                console.log(data);
+            },
+            onError(error) {
+                console.log(error);
+            },
+        });
+
+        const barQuery = query(() => repo.getBar());
+
+        barQuery.run(); // manual run repo.getBar
+
+        const refetchBar = () => barQuery.refetch();
+        const resetBarBar = () => barQuery.reset();
+        const updateBar = () => {
+            barQuery.set((prev) => ({ ...prev, data: 'new_bar' }));
+        };
+
+        return { fooQuery, barQuery };
+    },
+    { name: 'foo-bar-store', DI: container },
+);
+
+function FooBarComponent() {
+    const { fooQuery } = useStore(fooBarStore); // minimal rerenders
+
+    if (fooQuery.isLoading) {
+        return 'loading...';
+    }
+
+    if (fooQuery.error) {
+        return <div>{fooQuery.error}</div>;
+    }
+
+    return <div>{fooQuery.data}</div>;
+}
+```
 
 ## License
 

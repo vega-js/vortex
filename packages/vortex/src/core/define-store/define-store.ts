@@ -54,7 +54,7 @@ const defineStore = <
 
   const query = <Data, TError, TOptions>(
     cb: (options: TOptions) => Promise<Data>,
-    queryOptions?: QueryOptions,
+    queryOptions?: QueryOptions<Data, TError>,
   ) => createQuery<Data, TError, TOptions>(cb, localContext, queryOptions);
 
   const createApi = () => {

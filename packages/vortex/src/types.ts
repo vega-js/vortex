@@ -24,8 +24,10 @@ export type QueryData<Data, TError> = {
   data: Data | undefined;
 };
 
-export type QueryOptions = {
+export type QueryOptions<TData, TError> = {
   isAutorun?: boolean;
+  onSuccess?: (data: TData) => void;
+  onError?: (error: TError) => void;
 };
 
 export type Query<Data, TError, TOptions> = {
@@ -77,7 +79,7 @@ export type DefineApi<Deps = Record<string, unknown> | undefined> = {
 
   query: <Data, TError, TOptions = void>(
     cb: (options: TOptions) => Promise<Data>,
-    options?: QueryOptions,
+    options?: QueryOptions<Data, TError>,
   ) => Query<Data, TError, TOptions>;
 };
 
