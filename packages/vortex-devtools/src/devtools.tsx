@@ -27,6 +27,7 @@ const WidgetIcon = styled.div`
   cursor: pointer;
   z-index: 10001;
   transition: background 0.3s;
+  user-select: none;
 
   &:hover {
     background: #2563eb;
@@ -197,8 +198,11 @@ const DetailsContainer = styled.div.attrs<{ $isVisible: boolean }>(
   }),
 )`
   flex: 1;
-  background: #ffffff;
+  background-color: #f7f9fc;
   padding-left: 8px;
+  overflow: auto;
+  scrollbar-width: none;
+
   border-top-left-radius: 8px;
   border-bottom-left-radius: 8px;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
@@ -208,8 +212,12 @@ const DetailsContainer = styled.div.attrs<{ $isVisible: boolean }>(
 `;
 
 const DetailsHeader = styled.header`
-  padding: 16px 0;
+  padding: 16px;
   display: flex;
+  position: sticky;
+  top: 0;
+  background-color: #ffffff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
@@ -221,29 +229,91 @@ const DetailTitle = styled.h3`
   margin-bottom: 16px;
 `;
 
-const DataSection = styled.div`
-  flex: 1;
-`;
-
 const DataContainer = styled.div`
+  width: 100%;
   display: flex;
-  gap: 16px;
+  gap: 2rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
 `;
 
-const DataTitle = styled.h4`
-  font-weight: 600;
+const ObjectContainer = styled.pre`
+  flex: 1;
+  background-color: #ffffff;
+  padding: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+`;
+
+const Title2 = styled.h4`
+  font-size: 1rem;
+  font-weight: bold;
   color: #1e293b;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
 `;
 
-const DataContent = styled.pre`
-  background: #1e293b;
-  color: #fff;
-  padding: 16px;
-  border-radius: 4px;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+const KeyValueContainer = styled.div`
+  margin-bottom: 0.2rem;
+  line-height: 1.5;
 `;
+
+const HighlightedText = styled.span<{ color: string }>`
+  color: ${(props) => props.color};
+`;
+
+const renderData = (
+  data: Record<string, unknown>,
+  changes: Record<string, boolean>,
+  color: string,
+) => {
+  return Object.keys(data).map((key) => {
+    const value = data[key];
+    const isChanged = changes[key];
+
+    return (
+      <KeyValueContainer key={key}>
+        <strong>{key}:</strong>{' '}
+        {isChanged ? (
+          <HighlightedText color={color}>
+            {JSON.stringify(value, null, 2)}
+          </HighlightedText>
+        ) : (
+          JSON.stringify(value, null, 2)
+        )}
+      </KeyValueContainer>
+    );
+  });
+};
+
+const compareData = (
+  oldData: Record<string, unknown>,
+  newData: Record<string, unknown>,
+) => {
+  const changes: Record<string, boolean> = {};
+
+  Object.keys({ ...oldData, ...newData }).forEach((key) => {
+    if (JSON.stringify(oldData[key]) !== JSON.stringify(newData[key])) {
+      changes[key] = true;
+    }
+  });
+
+  return (
+    <>
+      <ObjectContainer>
+        <Title2>Old Data</Title2>
+        {renderData(oldData, changes, 'red')}
+      </ObjectContainer>
+      <ObjectContainer>
+        <Title2>New Data</Title2>
+        {renderData(newData, changes, 'green')}
+      </ObjectContainer>
+    </>
+  );
+};
 
 const WIDGET_HEIGHT_KEY = 'vortexDevToolsHeight';
 const WIDGET_OPEN_KEY = 'vortexDevToolsOpen';
@@ -268,6 +338,7 @@ const DevTools = () => {
   const toggleDevTools = () => {
     const newIsOpen = !isOpen;
 
+    console.log(newIsOpen);
     setIsOpen(newIsOpen);
     localStorage.setItem(WIDGET_OPEN_KEY, String(newIsOpen));
   };
@@ -409,7 +480,7 @@ const DevTools = () => {
                   <Timestamp>{action.timestamp}</Timestamp>
                 </ActionDetails>
                 <ActionKeys>
-                  {action.action !== 'init' &&
+                  {action.action === 'update' &&
                     Object.keys(action.newData as Record<string, unknown>).join(
                       ', ',
                     )}
@@ -430,29 +501,25 @@ const DevTools = () => {
               <>
                 <DetailTitle>{selectedAction.action}</DetailTitle>
                 <DataContainer>
-                  {selectedAction.action === 'update' ? (
-                    <>
-                      <DataSection>
-                        <DataTitle>Old Data</DataTitle>
-                        <DataContent>
-                          {JSON.stringify(selectedAction.oldData, null, 2)}
-                        </DataContent>
-                      </DataSection>
-                      <DataSection>
-                        <DataTitle>New Data</DataTitle>
-                        <DataContent>
-                          {JSON.stringify(selectedAction.newData, null, 2)}
-                        </DataContent>
-                      </DataSection>
-                    </>
-                  ) : (
-                    <DataSection>
-                      <DataTitle>Data</DataTitle>
-                      <DataContent>
-                        {JSON.stringify(selectedAction.newData, null, 2)}
-                      </DataContent>
-                    </DataSection>
-                  )}
+                  {
+                    selectedAction.action === 'update' ? (
+                      compareData(
+                        selectedAction.oldData as Record<string, unknown>,
+                        selectedAction.newData as Record<string, unknown>,
+                      )
+                    ) : (
+                      <ObjectContainer>
+                        {renderData(
+                          JSON.parse(
+                            JSON.stringify(selectedAction.newData),
+                          ) as Record<string, unknown>,
+                          {},
+                          'red',
+                        )}
+                      </ObjectContainer>
+                    )
+                    // <pre>{JSON.stringify(selectedAction.newData, null, 2)}</pre>
+                  }
                 </DataContainer>
               </>
             )}
