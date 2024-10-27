@@ -1,4 +1,4 @@
-# Vortex
+# Vortex 🌀️✨
 
 [![Build Size](https://img.shields.io/bundlephobia/minzip/@vegajs/vortex?label=bundle%20size&style=flat&colorB=49ff43)](https://bundlephobia.com/result?p=@vegajs/vortex)
 [![Version](https://img.shields.io/npm/v/@vegajs/vortex?style=flat&colorB=ffd547)](https://www.npmjs.com/package/@vegajs/vortex)

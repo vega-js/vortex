@@ -10,7 +10,7 @@ const createSemanticConfig = () => {
           { type: 'feat', release: 'minor' },
           { type: 'refactor', release: 'patch' },
           { type: 'major', release: 'major' },
-          { type: 'doc', release: 'patch' },
+          { type: 'docs', release: 'patch' },
         ],
       },
     ],
@@ -42,7 +42,7 @@ const createSemanticConfig = () => {
               hidden: false,
             },
             {
-              type: 'doc',
+              type: 'docs',
               section: '\u{1F4DD}  Docs',
               hidden: false,
             },

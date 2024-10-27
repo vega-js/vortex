@@ -17,20 +17,20 @@
 		"flux",
 		"devtools"
 	],
-	"homepage": "https://github.com/AndreyZlobin/vegajs/packages/vortex-devtools",
+	"homepage": "https://github.com/vega-js/vortex/packages/vortex-devtools",
 	"bugs": {
-		"url": "https://github.com/AndreyZlobin/vegajs/issues"
+		"url": "https://github.com/vega-js/vortex/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/AndreyZlobin/vegajs"
+		"url": "https://github.com/vega-js/vortex"
 	},
 	"license": "MIT",
 	"author": "Andrey Zlobin",
 	"main": "./dist/index.js",
 	"module": "./dist/index.js",
 	"types": "./dist/index.d.ts",
-	"files": ["dist", "README.md"],
+	"files": ["dist", "README.md", "docs"],
 	"scripts": {
 		"build": "modern build",
 		"build:watch": "modern build -w",
