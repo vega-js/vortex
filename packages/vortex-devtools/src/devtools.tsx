@@ -26,7 +26,7 @@ const WidgetIcon = styled.div`
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
   cursor: pointer;
   z-index: 10001;
-  transition: background 0.35s;
+  transition: background 0.3s;
 
   &:hover {
     background: #2563eb;
