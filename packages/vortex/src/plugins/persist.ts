@@ -1,5 +1,5 @@
 import type { DefineStore, NonFunctionKeys, UnwrappedState } from '../types';
-import { isReactive, toObjectKeys } from '../utils';
+import { isQuery, isReactive, toObjectKeys } from '../utils';
 
 type PersistOptions<T> = {
   key: string;
@@ -34,7 +34,12 @@ export const persistPlugin =
       return fields.reduce(
         (acc, fieldKey) => {
           if (s[fieldKey] !== undefined && s[fieldKey] !== null) {
-            acc[fieldKey] = s[fieldKey];
+            if (isQuery(store.state[fieldKey])) {
+              acc[fieldKey] = store.state[fieldKey].get()
+                .data as UnwrappedState<T>[typeof fieldKey];
+            } else {
+              acc[fieldKey] = s[fieldKey];
+            }
           }
 
           return acc;
@@ -43,35 +48,35 @@ export const persistPlugin =
       );
     };
 
-    if (typeof window !== 'undefined') {
-      const savedState = localStorage.getItem(key);
+    const savedState = localStorage.getItem(key);
 
-      try {
-        if (savedState) {
-          try {
-            const parsedState = JSON.parse(savedState) as UnwrappedState<T>;
+    try {
+      if (savedState) {
+        try {
+          const parsedState = JSON.parse(savedState) as UnwrappedState<T>;
 
-            store.action((s) => {
-              toObjectKeys(parsedState).forEach((el) => {
-                if (isReactive(s[el])) {
-                  s[el].set(() => parsedState[el]);
-                }
-              });
+          store.action((s) => {
+            toObjectKeys(parsedState).forEach((el) => {
+              if (isReactive(s[el])) {
+                s[el].set(() => parsedState[el]);
+              }
+
+              if (isQuery(s[el])) {
+                s[el].set((prev) => ({ ...prev, data: parsedState[el] }));
+              }
             });
-          } catch (error) {
-            console.error('Error parsing state:', error);
-            localStorage.removeItem(key);
-          }
-        } else {
-          localStorage.setItem(key, JSON.stringify(toNewState(state)));
+          });
+        } catch (error) {
+          console.error('Error parsing saved state:', error);
+          localStorage.removeItem(key);
         }
-      } finally {
+      } else {
+        localStorage.setItem(key, JSON.stringify(toNewState(state)));
       }
-
-      store.subscribe((newState) => {
-        localStorage.setItem(key, JSON.stringify(toNewState(newState)));
-      });
+    } finally {
     }
 
-    return store;
+    return store.subscribe((newState) => {
+      localStorage.setItem(key, JSON.stringify(toNewState(newState)));
+    });
   };

@@ -2,6 +2,7 @@ import type {
   DefineApi,
   DefineLocalApi,
   DefineStore,
+  QueryOptions,
   Reactive,
   StoreOptions,
   UnwrappedState,
@@ -10,6 +11,7 @@ import type {
 import {
   ReactiveContext,
   isComputed,
+  isQuery,
   isReactive,
   shallowEqual,
   toObjectKeys,
@@ -17,6 +19,7 @@ import {
 import { BatchManager } from '../batch-manager';
 import { createComputed } from '../create-computed';
 import { createEffect } from '../create-effect';
+import { createQuery } from '../create-query';
 import { createReactive } from '../create-reactive';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
@@ -49,8 +52,18 @@ const defineStore = <
   const effect = (fn: () => void) =>
     createEffect(fn, localContext, batchManager);
 
+  const query = <Data, TError, TOptions>(
+    cb: (options: TOptions) => Promise<Data>,
+    queryOptions?: QueryOptions,
+  ) => createQuery<Data, TError, TOptions>(cb, localContext, queryOptions);
+
   const createApi = () => {
-    const creators: DefineLocalApi<DIDeps> = { reactive, computed, effect };
+    const creators: DefineLocalApi<DIDeps> = {
+      reactive,
+      computed,
+      effect,
+      query,
+    };
 
     if (DI) {
       creators.DI = DI;
@@ -69,7 +82,11 @@ const defineStore = <
     const newSnapshot = toObjectKeys(state).reduce((acc, key) => {
       const reactiveUnit = state[key];
 
-      if (isReactive(reactiveUnit) || isComputed(reactiveUnit)) {
+      if (
+        isReactive(reactiveUnit) ||
+        isComputed(reactiveUnit) ||
+        isQuery(reactiveUnit)
+      ) {
         acc[key] = reactiveUnit.get() as UnwrappedState<T>[typeof key];
       } else {
         acc[key] = reactiveUnit as UnwrappedState<T>[typeof key];
@@ -113,7 +130,8 @@ const defineStore = <
 
   const observeReactivity = () => {
     const reactiveUnits = Object.keys(state).filter(
-      (key) => isReactive(state[key]) || isComputed(state[key]),
+      (key) =>
+        isReactive(state[key]) || isComputed(state[key]) || isQuery(state[key]),
     );
 
     reactiveUnits.forEach((key) => {

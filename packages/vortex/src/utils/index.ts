@@ -1,4 +1,4 @@
-import type { Computed, Reactive } from '../types';
+import type { Computed, Query, Reactive } from '../types';
 
 export * from './reactive-context';
 
@@ -32,5 +32,18 @@ export const isComputed = (value: unknown): value is Computed<unknown> => {
     Object.hasOwn(value, 'type') &&
     Object.hasOwn(value, 'get') &&
     (value as { type?: unknown }).type === 'computed'
+  );
+};
+
+export const isQuery = (
+  value: unknown,
+): value is Query<unknown, unknown, unknown> => {
+  return !!(
+    value &&
+    typeof value === 'object' &&
+    Object.hasOwn(value, 'type') &&
+    Object.hasOwn(value, 'set') &&
+    Object.hasOwn(value, 'get') &&
+    (value as { type?: unknown }).type === 'query'
   );
 };

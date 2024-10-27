@@ -16,12 +16,40 @@ export type Computed<Value> = {
   type: 'computed';
 };
 
+export type QueryData<Data, TError> = {
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  error: TError | null;
+  data: Data | undefined;
+};
+
+export type QueryOptions = {
+  isAutorun?: boolean;
+};
+
+export type Query<Data, TError, TOptions> = {
+  get: () => QueryData<Data, TError>;
+  set: (
+    value:
+      | QueryData<Data, TError>
+      | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>),
+  ) => void;
+  subscribe: (callback: (value: QueryData<Data, TError>) => void) => () => void;
+  type: 'query';
+  reset(): void;
+  refetch(): Promise<void>;
+  run: (options: TOptions) => Promise<void>;
+};
+
 export type UnwrappedState<T = UnknownState> = {
   [K in keyof T]: T[K] extends Reactive<infer V>
     ? V
     : T[K] extends Computed<infer V>
       ? V
-      : T[K];
+      : T[K] extends Query<infer D, infer E, infer O>
+        ? QueryData<D, E> & Record<never, O>
+        : T[K];
 };
 
 export type NonFunctionKeys<T> = {
@@ -46,6 +74,11 @@ export type DefineApi<Deps = Record<string, unknown> | undefined> = {
   computed: <T>(fn: () => T) => Computed<T>;
   effect: (fn: () => void) => void;
   DI: Deps extends undefined ? never : DIContainer<Deps>;
+
+  query: <Data, TError, TOptions = void>(
+    cb: (options: TOptions) => Promise<Data>,
+    options?: QueryOptions,
+  ) => Query<Data, TError, TOptions>;
 };
 
 export type DefineLocalApi<DIDeps> = Omit<DefineApi, 'DI'> & {
