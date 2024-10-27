@@ -17,13 +17,13 @@
 		"flux",
 		"devtools"
 	],
-	"homepage": "https://github.com/vega-js/vortex/packages/vortex-devtools",
+	"homepage": "https://github.com/vega-js/vortex",
 	"bugs": {
 		"url": "https://github.com/vega-js/vortex/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/vega-js/vortex"
+		"url": "https://github.com/vega-js/vortex/packages/vortex-devtools"
 	},
 	"license": "MIT",
 	"author": "Andrey Zlobin",
