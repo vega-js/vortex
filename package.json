@@ -1,0 +1,62 @@
+{
+	"workspaces": ["packages/*", "tests"],
+	"scripts": {
+		"change": "changeset",
+		"changeset": "changeset",
+		"build": "npm run build --workspaces --if-present",
+		"build-storybook": "storybook build",
+		"ci-publish": "npm run ci-publish --workspaces --if-present",
+		"lint": "npm run lint --workspaces --if-present",
+		"biome": "biome check . --diagnostic-level=warn",
+		"biome:fix": "biome check --write . --diagnostic-level=error",
+		"biome:fix-unsafe": "biome check --write --unsafe . --diagnostic-level=warn",
+		"lint:fix": "npm run lint:fix --workspaces --if-present",
+		"prepare": "npx husky install",
+		"sort-package-json": "npx sort-package-json \"./package.json\" \"packages/*/package.json\"",
+		"storybook": "storybook dev -p 6006",
+		"tests": "npm run tests --workspaces --if-present",
+		"tests:watch": "npx vitest",
+		"remove:dist": "npx rimraf ./packages/dist ",
+		"remove:nm": "npx rimraf node_modules ./packages/node_modules",
+		"reset": "npm run remove:dist && npm run remove:nm",
+		"typecheck": "npm run typecheck --workspaces --if-present"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^1.9.3",
+		"@changesets/cli": "^2.27.9",
+		"@commitlint/config-conventional": "^19.5.0",
+		"@modern-js/module-tools": "2.60.1",
+		"@modern-js/runtime": "2.60.1",
+		"@self-kit/eslint-config-node": "^1.0.5",
+		"@self-kit/eslint-config-node-ts": "^1.0.5",
+		"@self-kit/eslint-config-react-ts": "1.0.5",
+		"@self-kit/prettier-config": "^1.0.5",
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/commit-analyzer": "^11.0.0",
+		"@semantic-release/git": "^10.0.1",
+		"@semantic-release/github": "^9.0.6",
+		"@semantic-release/release-notes-generator": "^12.0.0",
+		"@types/node": "^22.7.5",
+		"@types/react": "^18.3.11",
+		"@types/react-dom": "^18.3.1",
+		"@vitejs/plugin-react": "4.3.2",
+		"commitlint": "19.5.0",
+		"conventional-changelog-conventionalcommits": "^7.0.2",
+		"eslint": "8.48.0",
+		"eslint-plugin-storybook": "^0.6.15",
+		"husky": " 9.1.6",
+		"jsdom": "25.0.1",
+		"lint-staged": "15.2.10",
+		"prettier": "3.3.3",
+		"react": "^18.3.1",
+		"semantic-release": "^21.1.2",
+		"typescript": "5.6.3",
+		"vitest": "2.1.2"
+	},
+	"peerDependencies": {
+		"@modern-js/runtime": "2.60.1"
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}
