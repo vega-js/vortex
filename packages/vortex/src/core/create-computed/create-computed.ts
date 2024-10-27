@@ -1,6 +1,5 @@
 import type { Computed } from '../../types';
-import type { ReactiveContext } from '../../utils';
-import { isEqual } from '../../utils';
+import { ReactiveContext, shallowEqual } from '../../utils';
 import { createReactive } from '../create-reactive';
 
 export const createComputed = <T>(
@@ -13,7 +12,7 @@ export const createComputed = <T>(
   const update = () => {
     const newValue = fn();
 
-    if (!isEqual(cachedValue, newValue)) {
+    if (!shallowEqual(cachedValue, newValue)) {
       cachedValue = newValue;
       result.set(newValue);
     }
@@ -23,7 +22,7 @@ export const createComputed = <T>(
 
   return {
     type: 'computed',
-    get: result.get.bind(result),
-    subscribe: result.subscribe.bind(result),
+    get: result.get,
+    subscribe: result.subscribe,
   };
 };
