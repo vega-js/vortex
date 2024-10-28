@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-    <img src="https://github.com/vega-js/vortex/packages/vortex/docs/static/preview.svg" alt="Vortex Preview"/>
+    <img src="https://raw.githubusercontent.com/vega-js/vortex/main/packages/vortex/docs/static/preview.svg" alt="Vortex Preview"/>
 </p>
 
 ---
@@ -62,7 +62,7 @@ const counterStore = defineStore(({ reactive }) => {
 }, { name: 'store_name' }); // For correct tracking in Devtools, add the store name.
 ```
 
-![Devtools](https://github.com/vega-js/vortex/packages/vortex-devtools/docs/devtools-preview.png)
+![Devtools](https://raw.githubusercontent.com/vega-js/vortex/main/packages/vortex-devtools/docs/devtools-preview.png)
 
 In this example:
 - The `counterStore` is defined using `defineStore`, with a reactive `count` state and an `increment` action.
