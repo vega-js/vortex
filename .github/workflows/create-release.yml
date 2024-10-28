@@ -40,8 +40,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
+        continue-on-error: true
 
       - name: Set release version as output
+        if: steps.release.outputs.new_release_version != ''
         run: |
           tag=$(git describe --tags --abbrev=0)
           echo "VERSION=$tag" >> $GITHUB_ENV
@@ -49,9 +51,11 @@ jobs:
           VERSION: ${{ steps.release.outputs.new_release_version }}
 
       - name: Update version in package.json
+        if: env.VERSION != ''
         run: npm version ${{ env.VERSION }} --no-git-tag-version
 
       - name: Configure npm for authentication
+        if: env.VERSION != ''
         run: |
           echo "//registry.npmjs.org/:_authToken=${NPM_PUBLISH_TOKEN}" >> ~/.npmrc
           echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
@@ -60,6 +64,7 @@ jobs:
           NPM_PUBLISH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Update versions in workspace packages
+        if: env.VERSION != ''
         run: |
           # Iterate through each package in the workspace
           for pkg in $(jq -r '.workspaces[]' package.json); do
@@ -68,9 +73,11 @@ jobs:
           done
 
       - name: Build project
+        if: env.VERSION != ''
         run: npm run build
 
       - name: Publish to npm
+        if: env.VERSION != ''
         run: npm run ci-publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
