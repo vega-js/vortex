@@ -1,0 +1,50 @@
+{
+	"name": "@vegajs/vortex-devtools",
+	"version": "0.0.0",
+	"description": "Vortex devtools",
+	"keywords": [
+		"state management",
+		"TypeScript",
+		"JavaScript",
+		"Vortex",
+		"reactive",
+		"typed",
+		"computed",
+		"dependency injection",
+		"frontend",
+		"plugins",
+		"state",
+		"flux",
+		"devtools"
+	],
+	"homepage": "https://github.com/vega-js/vortex",
+	"bugs": {
+		"url": "https://github.com/vega-js/vortex/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vega-js/vortex/packages/vortex-devtools"
+	},
+	"license": "MIT",
+	"author": "Andrey Zlobin",
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"files": ["dist", "README.md"],
+	"scripts": {
+		"build": "modern build",
+		"build:watch": "modern build -w",
+		"ci-publish": "npm publish --access public",
+		"eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx . --config .eslintrc",
+		"lint": "npm run eslint && npm run typecheck",
+		"lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx  . --fix --config .eslintrc --quiet",
+		"tests": "vitest run",
+		"tests:ci": "vitest run --reporter=junit --outputFile.junit=junit.xml",
+		"tests:watch": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"devDependencies": {
+		"react": "18.3.1",
+		"styled-components": "6.1.13"
+	}
+}

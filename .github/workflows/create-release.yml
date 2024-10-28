@@ -1,0 +1,98 @@
+name: Create release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - beta
+      - pre/rc
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  semantic-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Set npm registry
+        run: npm config set registry https://registry.npmjs.org/
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run semantic release
+        id: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npx semantic-release
+
+      - name: Set release version as output
+        run: |
+          tag=$(git describe --tags --abbrev=0)
+          echo "VERSION=$tag" >> $GITHUB_ENV
+        env:
+          VERSION: ${{ steps.release.outputs.new_release_version }}
+
+      - name: Update version in package.json
+        run: npm version ${{ env.VERSION }} --no-git-tag-version
+
+      - name: Configure npm for authentication
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_PUBLISH_TOKEN}" >> ~/.npmrc
+          echo "registry=https://registry.npmjs.org/" >> ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+        env:
+          NPM_PUBLISH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Update versions in workspace packages
+        run: |
+          # Iterate through each package in the workspace
+          for pkg in $(jq -r '.workspaces[]' package.json); do
+            # Update the version in each package.json file
+            npm version ${{ env.VERSION }} --workspace $pkg --no-git-tag-version
+          done
+
+      - name: Build project
+        run: npm run build
+
+      - name: Publish to npm
+        run: npm run ci-publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+#      - name: Delete release on failure
+#        if: failure()
+#        run: |
+#          tag=$(git describe --tags --abbrev=0)
+#          release_id=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+#            https://api.github.com/repos/${{ github.repository }}/releases/tags/$tag | jq -r '.id')
+#
+#          # To remove release
+#          curl -X DELETE -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+#            https://api.github.com/repos/${{ github.repository }}/releases/$release_id
+#
+#          # To remove tag
+#          git push --delete origin $tag
+#        env:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Cleanup tag on failure
+#        if: failure()
+#        run: |
+#          tag=$(git describe --tags --abbrev=0)
+#          git tag -d $tag

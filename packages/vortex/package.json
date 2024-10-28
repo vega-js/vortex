@@ -1,0 +1,69 @@
+{
+	"name": "@vegajs/vortex",
+	"version": "0.0.0",
+	"description": "Vortex is a powerful, flexible, and typed state management solution for TypeScript and JavaScript projects. It ensures seamless and scalable communication between components and modules, providing a reactive, event-driven architecture with support for dependency injection, computed properties, and plugins.",
+	"keywords": [
+		"state management",
+		"state",
+		"manager",
+		"management",
+		"redux",
+		"store",
+		"reactive",
+		"dependency injection",
+		"react",
+		"state",
+		"flux"
+	],
+	"homepage": "https://github.com/vega-js/vortex/packages/vortex",
+	"bugs": {
+		"url": "https://github.com/vega-js/vortex/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vega-js/vortex"
+	},
+	"sideEffects": false,
+	"license": "MIT",
+	"author": "Andrey Zlobin",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./core": {
+      "import": "./dist/core/index.js",
+      "require": "./dist/core/index.js",
+      "types": "./dist/core/index.d.ts"
+    }
+  },
+	"files": ["dist", "README.md"],
+	"scripts": {
+		"build": "modern build",
+		"build:watch": "modern build -w",
+		"ci-publish": "npm publish --access public",
+		"eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx . --config .eslintrc",
+		"lint": "npm run eslint && npm run typecheck",
+		"lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx  . --fix --config .eslintrc --quiet",
+		"tests": "vitest run",
+		"tests:ci": "vitest run --reporter=junit --outputFile.junit=junit.xml",
+		"tests:watch": "vitest",
+		"typecheck": "tsc --noEmit"
+	},
+	"peerDependencies": {
+		"@types/react": ">=18.0.0",
+		"react": ">=18.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@types/react": {
+			"optional": true
+		},
+		"react": {
+			"optional": true
+		}
+	}
+}

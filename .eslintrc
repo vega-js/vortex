@@ -1,0 +1,11 @@
+{
+  "extends": "@self-kit/eslint-config-node-ts",
+  "rules": {
+    "@typescript-eslint/consistent-type-imports": [
+      "error",
+      {
+        "prefer": "type-imports"
+      }
+    ]
+  }
+}

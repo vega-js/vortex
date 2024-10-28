@@ -103,23 +103,23 @@ A simple counter with reactive state that increments on each click.
 import { defineStore, useStore } from '@vegajs/vortex';
 
 const counterStore = defineStore(({ reactive, computed }) => {
-  const count = reactive(0);
-  const doubleCount = computed(() => count.get() * 2);
-  const increment = () => count.set(prev => prev + 1);
+    const count = reactive(0);
+    const doubleCount = computed(() => count.get() * 2);
+    const increment = () => count.set(prev => prev + 1);
 
-  return { count, doubleCount, increment };
+    return { count, doubleCount, increment };
 });
 
 const Counter = () => {
-  const { count, doubleCount, increment } = useStore(counterStore);
+    const { count, doubleCount, increment } = useStore(counterStore);
 
-  return (
-    <div>
-      <p>count: {count}</p>
-      <p>double count: {doubleCount}</p>
-      <button onClick={increment}>Increment</button>
-    </div>
-  );
+    return (
+        <div>
+            <p>count: {count}</p>
+            <p>double count: {doubleCount}</p>
+            <button onClick={increment}>Increment</button>
+        </div>
+    );
 };
 ```
 ---

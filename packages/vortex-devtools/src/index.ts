@@ -1,0 +1,1 @@
+export { initDevtools } from './devtools';

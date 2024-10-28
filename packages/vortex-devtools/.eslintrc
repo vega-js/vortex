@@ -1,0 +1,8 @@
+{
+  "root": true,
+  "extends": "@self-kit/eslint-config-react-ts",
+  "rules": {
+    "@typescript-eslint/naming-convention": "off"
+  },
+  "ignorePatterns": ["dist"]
+}
