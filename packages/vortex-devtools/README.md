@@ -1,9 +1,16 @@
-# Vortex Devtools 🌀️ 🛠
+<h1 align="center">Vortex 🌀🛠</h1>
 
-[![Version](https://img.shields.io/npm/v/@vegajs/vortex-devtools?style=flat&colorB=ffd547)](https://www.npmjs.com/package/@vegajs/vortex-devtools)
-[![Downloads](https://img.shields.io/npm/dt/@vegajs/vortex-devtools.svg)](https://www.npmjs.com/package/@vegajs/vortex-devtools)
+<p align="center">
+    <a href="https://www.npmjs.com/package/@vegajs/vortex-devtools"><img src="https://img.shields.io/npm/v/@vegajs/vortex-devtools?style=flat&colorB=ffd547" alt="Latest version" height="20"/></a>
+    <a href="https://www.npmjs.com/package/@vegajs/vortex-devtools"><img src="https://img.shields.io/npm/dt/@vegajs/vortex-devtools.svg" alt="Downloads" height="20"/></a>
+</p>
 
-![img.png](./docs/img.png)
+<p align="center">
+    <img src="https://github.com/vega-js/vortex/packages/vortex/docs/static/preview.svg" alt="Vortex Preview"/>
+</p>
+
+---
+
 
 **Vortex Devtools** is a developer toolset designed to enhance your experience with the Vortex state management library. It provides insightful state debugging, tracking, and other development utilities to help you understand the internal workings of your application.
 
@@ -55,7 +62,7 @@ const counterStore = defineStore(({ reactive }) => {
 }, { name: 'store_name' }); // For correct tracking in Devtools, add the store name.
 ```
 
-![Devtools Screenshot](./docs/img.png)
+![Devtools](https://github.com/vega-js/vortex/packages/vortex-devtools/docs/devtools-preview.png)
 
 In this example:
 - The `counterStore` is defined using `defineStore`, with a reactive `count` state and an `increment` action.
