@@ -15,7 +15,7 @@
 </p>
 
 
-## Why Choose Vortex? 🌪✨
+## Why Choose Vortex? 🌀✨
 
 - 🔒 **Type-safe Excellence**: Guarantees full type-safety—no `any` types lurking around.
 - ⚡ **Minimized Re-renders**: Only essential updates occur, keeping your app snappy.
