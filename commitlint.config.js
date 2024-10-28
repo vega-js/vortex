@@ -3,6 +3,7 @@ const DEFAULT_TYPE = [
   'chore',
   'ci',
   'docs',
+  'doc',
   'feat',
   'fix',
   'perf',
