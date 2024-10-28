@@ -1,5 +1,5 @@
-import type { ReactiveContext } from '../../utils';
 import type { BatchManager } from '../batch-manager';
+import type { ReactiveContext } from '../reactive-context';
 
 export const createEffect = (
   fn: () => void,

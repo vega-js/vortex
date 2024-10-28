@@ -9,7 +9,6 @@ import type {
   WatchCallback,
 } from '../../types';
 import {
-  ReactiveContext,
   isComputed,
   isQuery,
   isReactive,
@@ -21,6 +20,7 @@ import { createComputed } from '../create-computed';
 import { createEffect } from '../create-effect';
 import { createQuery } from '../create-query';
 import { createReactive } from '../create-reactive';
+import { ReactiveContext } from '../reactive-context';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
 const defineStore = <

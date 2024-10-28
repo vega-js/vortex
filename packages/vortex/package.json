@@ -4,26 +4,26 @@
 	"description": "Vortex is a powerful, flexible, and typed state management solution for TypeScript and JavaScript projects. It ensures seamless and scalable communication between components and modules, providing a reactive, event-driven architecture with support for dependency injection, computed properties, and plugins.",
 	"keywords": [
 		"state management",
-    "state",
-    "manager",
-    "management",
-    "redux",
-    "store",
+		"state",
+		"manager",
+		"management",
+		"redux",
+		"store",
 		"reactive",
 		"dependency injection",
-    "react",
+		"react",
 		"state",
 		"flux"
 	],
-  "homepage": "https://github.com/vega-js/vortex/packages/vortex",
-  "bugs": {
-    "url": "https://github.com/vega-js/vortex/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/vega-js/vortex"
-  },
-  "sideEffects": false,
+	"homepage": "https://github.com/vega-js/vortex/packages/vortex",
+	"bugs": {
+		"url": "https://github.com/vega-js/vortex/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/vega-js/vortex"
+	},
+	"sideEffects": false,
 	"license": "MIT",
 	"author": "Andrey Zlobin",
 	"main": "./dist/index.js",
@@ -42,16 +42,16 @@
 		"tests:watch": "vitest",
 		"typecheck": "tsc --noEmit"
 	},
-  "peerDependencies": {
-    "@types/react": ">=18.0.0",
-    "react": ">=18.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@types/react": {
-      "optional": true
-    },
-    "react": {
-      "optional": true
-    }
-  }
+	"peerDependencies": {
+		"@types/react": ">=18.0.0",
+		"react": ">=18.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@types/react": {
+			"optional": true
+		},
+		"react": {
+			"optional": true
+		}
+	}
 }

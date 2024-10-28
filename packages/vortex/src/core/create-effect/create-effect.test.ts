@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ReactiveContext } from '../../utils';
 import { BatchManager } from '../batch-manager';
+import { ReactiveContext } from '../reactive-context';
 import { createEffect } from './create-effect';
 
 describe('createEffect with batching', () => {

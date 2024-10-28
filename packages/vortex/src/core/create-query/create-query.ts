@@ -1,6 +1,6 @@
 import type { Query, QueryData, QueryOptions } from '../../types';
-import { ReactiveContext } from '../../utils';
 import { createReactive } from '../create-reactive';
+import type { ReactiveContext } from '../reactive-context';
 
 const createInitial = () => ({
   isLoading: false,

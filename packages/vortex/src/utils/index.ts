@@ -1,7 +1,5 @@
 import type { Computed, Query, Reactive } from '../types';
 
-export * from './reactive-context';
-
 export * from './is-equal';
 
 export * from './shallow-equal';

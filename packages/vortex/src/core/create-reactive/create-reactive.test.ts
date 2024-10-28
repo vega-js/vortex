@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { ReactiveContext } from '../../utils';
+import { ReactiveContext } from '../reactive-context';
 import { createReactive } from './create-reactive';
 
 describe('createReactive', () => {

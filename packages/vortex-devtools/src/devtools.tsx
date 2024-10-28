@@ -326,7 +326,7 @@ const DevTools = () => {
   const [storeNames, setStoreNames] = useState<string[]>([]);
 
   const [height, setHeight] = useState<number>(() =>
-    parseInt(localStorage.getItem(WIDGET_HEIGHT_KEY) || '300', 10),
+    Number.parseInt(localStorage.getItem(WIDGET_HEIGHT_KEY) || '300', 10),
   );
   const [isResizing, setIsResizing] = useState(false);
   const [isOpen, setIsOpen] = useState(

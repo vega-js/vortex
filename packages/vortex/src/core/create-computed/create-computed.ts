@@ -1,6 +1,7 @@
 import type { Computed } from '../../types';
-import { ReactiveContext, shallowEqual } from '../../utils';
+import {shallowEqual } from '../../utils';
 import { createReactive } from '../create-reactive';
+import type { ReactiveContext } from '../reactive-context';
 
 export const createComputed = <T>(
   fn: () => T,
