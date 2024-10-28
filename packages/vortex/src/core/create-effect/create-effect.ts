@@ -7,8 +7,10 @@ export const createEffect = (
   batchManager: BatchManager,
 ) => {
   const update = () => {
-    batchManager.addTask(() => {
-      context.track(fn);
+    Promise.resolve().then(() => {
+      batchManager.addTask(() => {
+        context.track(fn);
+      });
     });
   };
 
