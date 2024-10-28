@@ -1,7 +1,7 @@
 {
 	"name": "@vegajs/vortex",
 	"version": "0.0.0",
-	"description": "Vortex is a powerful, flexible, and typed state management solution for TypeScript and JavaScript projects. It ensures seamless and scalable communication between components and modules, providing a reactive, event-driven architecture with support for dependency injection, computed properties, and plugins.",
+  "description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
 	"keywords": [
 		"state management",
 		"state",
