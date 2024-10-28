@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-    <img src="https://github.com/vega-js/vortex/packages/vortex/docs/static/preview.svg" alt="Vortex Preview"/>
+    <img src="https://raw.githubusercontent.com/vega-js/vortex/main/packages/vortex/docs/static/preview.svg" alt="Vortex Preview"/>
 </p>
 
 
@@ -27,8 +27,8 @@
 
 ---
 
-- [Explore the full documentation](https://github.com/vega-js/vortex/docs/main.md)
-- [Dive into more examples and see Vortex in action](https://github.com/vega-js/vortex/docs/examples/main.md)
+- [Explore the full documentation](https://github.com/vega-js/vortex/blob/main/packages/vortex/docs/main.md)
+- [Dive into more examples and see Vortex in action](https://github.com/vega-js/vortex/blob/main/packages/vortex/docs/examples/main.md)
 
 ---
 
