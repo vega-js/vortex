@@ -45,3 +45,10 @@ export const isQuery = (
     (value as { type?: unknown }).type === 'query'
   );
 };
+
+export const isReactiveUnit = (
+  unit: unknown,
+): unit is
+  | Computed<unknown>
+  | Query<unknown, unknown, unknown>
+  | Reactive<unknown> => isReactive(unit) || isComputed(unit) || isQuery(unit);

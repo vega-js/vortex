@@ -4,11 +4,11 @@ export default defineConfig({
   plugins: [moduleTools()],
   buildConfig: {
     platform: 'browser',
-    target: 'esnext',
+    target: 'es2018',
     minify: 'terser',
     jsx: 'automatic',
     splitting: true,
-    shims: true,
+    shims: false,
     format: 'esm',
     buildType: 'bundleless',
     input: [
