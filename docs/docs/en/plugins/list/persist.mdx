@@ -1,0 +1,67 @@
+# Persist Plugin
+
+The `persistPlugin` is used to persist the state of a store in `localStorage`. It ensures that the state of your store is maintained across page reloads by saving and rehydrating the state from storage.
+
+## Import
+
+```mdx
+import { persistPlugin } from '@vegajs/vortex/plugins';
+```
+
+## Usage
+
+The `persistPlugin` takes an options object with the following properties:
+
+- `key` (string, `required`): The key used to store the state in `localStorage`.
+- `properties` (array of keys, optional): A list of specific properties to persist. If not provided, all reactive properties will be persisted.
+
+```mdx
+type PersistOptions<T> = {
+  key: string;
+  properties?: Array<NonFunctionKeys<T>>;
+};
+```
+
+---
+
+#### Base
+
+```mdx
+const counterStore = defineStore(
+  ({ reactive, computed }) => {
+    const count = reactive(0);
+    const doubleCount = computed(() => count.get() * 2);
+
+    return { count, doubleCount };
+  },
+  { plugins: [persistPlugin({ key: 'counterStore' })] },
+);
+```
+
+#### With properties
+
+```mdx
+const counterStore = defineStore(
+  ({ reactive, computed }) => {
+    const count = reactive(0); // only count will be saved
+    const doubleCount = computed(() => count.get() * 2);
+
+    return { count, doubleCount };
+  },
+  { plugins: [persistPlugin({ key: 'counterStore', properties: ['count'] })] },
+);
+```
+
+## Plugin Details
+
+The `persistPlugin` works by saving the store state to `localStorage` and rehydrating it on initialization. This allows the store to maintain its state between page reloads.
+
+> [!WARNING]
+> If an error occurs while parsing the saved state, the plugin will remove the corrupted item from `localStorage` to prevent issues.
+
+## Notes
+
+- The plugin uses `localStorage` to persist state, making it suitable for browser environments.
+- The plugin supports both `reactive` and `query-based` states, ensuring they are properly rehydrated.
+
+

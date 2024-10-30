@@ -1,0 +1,44 @@
+# Installation
+
+import { PackageManagerTabs } from '@theme';
+
+<PackageManagerTabs
+  command={{
+    npm: 'npm add vergajs/vortex@latest',
+    yarn: 'yarn add vergajs/vortex',
+    pnpm: 'pnpm add vergajs/vortex@latest',
+  }}
+/>
+
+
+## Creating your first reactive Store
+
+A simple counter with reactive state that increments on each click.
+
+```mdx
+import { defineStore, useStore } from '@vegajs/vortex';
+
+const counterStore = defineStore(({ reactive, computed }) => {
+    const count = reactive(0);
+    const doubleCount = computed(() => count.get() * 2);
+    const increment = () => count.set(prev => prev + 1);
+
+    return { count, doubleCount, increment };
+});
+
+export const MyComponent = () => {
+    const { count, doubleCount, increment } = useStore(counterStore);
+
+    return (
+        <div>
+            <p>count: {count}</p>
+            <p>double count: {doubleCount}</p>
+            <button onClick={increment}>Increment</button>
+        </div>
+    );
+};
+```
+### Result:
+import ReactComponent from "../examples/react.component";
+
+<ReactComponent />

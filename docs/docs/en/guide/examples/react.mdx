@@ -1,0 +1,33 @@
+# React
+
+## Real-World Example
+
+import Base from "./react.component";
+
+A simple counter with reactive state that increments on each click.
+
+```mdx
+import { defineStore, useStore } from '@vegajs/vortex';
+
+const counterStore = defineStore(({ reactive, computed }) => {
+    const count = reactive(0);
+    const increment = () => count.set(prev => prev + 1);
+
+    return { count, increment };
+});
+
+export const A = () => {
+    const { count, increment } = useStore(counterStore);
+
+    return (
+        <div>
+            <p>count: {count}</p>
+            <button onClick={increment}>Increment</button>
+        </div>
+    );
+};
+```
+
+### Result
+
+<Base />

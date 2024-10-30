@@ -1,0 +1,63 @@
+# Query
+
+
+import StatusComponent from "./query-components/status-component";
+import SearchComponent from "./query-components/search.component";
+
+### With status and handling
+
+```mdx
+const usersStore = defineStore(({ query }) => {
+  const usersRepo = new UsersRepo();
+
+  const usersQuery = query<User[], Error>(usersRepo.getUsers, {
+    isAutorun: true,
+  });
+
+  return {
+    usersQuery,
+    refetch: usersQuery.refetch,
+  };
+});
+```
+
+### Result:
+
+<StatusComponent />
+
+---
+
+### With dynamic params
+
+```mdx
+const searchStore = defineStore(({ query, reactive, effect }) => {
+  const usersRepo = new UsersRepo();
+  const search = reactive('');
+
+  const userQuery = query<User | null, void, string>((name) =>
+    usersRepo.getUserByName(name),
+  );
+
+  effect(() => {
+    const searchValue = search.get();
+
+    if (searchValue) {
+      userQuery.run(searchValue);
+    }
+  });
+
+  const onSearch = (value: string) => search.set(value);
+
+  return {
+    search,
+    userQuery,
+    onSearch,
+  };
+});
+```
+### Result:
+
+<SearchComponent />
+
+
+

@@ -58,10 +58,6 @@ export type NonFunctionKeys<T> = {
   [K in keyof T]: T[K] extends Function ? never : K;
 }[keyof T];
 
-export type StateWithoutActions<T extends UnknownState> = {
-  [K in keyof T as T[K] extends Function ? never : K]: T[K];
-};
-
 export type WatchCallback<T> = (newState: T, oldState: T) => void;
 
 export type DefineStore<T extends UnknownState> = {
@@ -69,6 +65,7 @@ export type DefineStore<T extends UnknownState> = {
   subscribe(callback: WatchCallback<UnwrappedState<T>>): () => void;
   getSnapshot(): UnwrappedState<T>;
   action(cb: (state: T) => void): void;
+  cleanupAll(): void;
 };
 
 export type DefineApi<Deps = Record<string, unknown> | undefined> = {

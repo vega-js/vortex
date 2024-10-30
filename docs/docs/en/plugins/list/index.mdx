@@ -1,0 +1,68 @@
+# Plugins
+
+You can extend the functionality of your stores using plugins, either `built-in` or `custom`.
+
+## Plugin List
+
+- [Persist plugin](/plugins/list/persist): Allows storing the state of the store in storage.
+
+## Using Plugins
+
+To register a plugin, you need to add the `defineStore options` after `plugins`.
+
+### Example
+
+```mdx
+import { defineStore } from '@vegajs/vortex';
+import { persistPlugin } from '@vegajs/vortex/plugins';
+
+const counterStore = defineStore(
+  ({ reactive }) => {
+    const count = reactive(0);
+
+    return { count };
+  },
+  { plugins: [persistPlugin({ key: 'counterStore' })] },
+);
+```
+
+---
+
+### Api
+
+```mdx
+type Plugin<T extends UnknownState> = (store: DefineStore<T>) => void;
+```
+
+---
+
+:::tip
+You can also create your own plugin that conforms to the interface.
+
+For example:
+:::
+
+
+```mdx
+const subscriberCounterPlugin = <T extends UnknownState>(
+  store: DefineStore<T>,
+) => {
+  let subscriberCount = 0;
+
+  const originalSubscribe = store.subscribe;
+
+  store.subscribe = (callback) => {
+    subscriberCount++;
+    console.log(`Subscribers count: ${subscriberCount}`);
+
+    const unsubscribe = originalSubscribe(callback);
+
+    return () => {
+      subscriberCount--;
+      console.log(`Subscribers count: ${subscriberCount}`);
+      unsubscribe();
+    };
+  };
+};
+```
+

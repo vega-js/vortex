@@ -8,13 +8,7 @@ import type {
   UnwrappedState,
   WatchCallback,
 } from '../../types';
-import {
-  isComputed,
-  isQuery,
-  isReactive,
-  shallowEqual,
-  toObjectKeys,
-} from '../../utils';
+import { isReactiveUnit, shallowEqual, toObjectKeys } from '../../utils';
 import { BatchManager } from '../batch-manager';
 import { createComputed } from '../create-computed';
 import { createEffect } from '../create-effect';
@@ -32,7 +26,7 @@ const defineStore = <
 ): DefineStore<T> => {
   const batchManager = new BatchManager();
 
-  const listeners: Array<WatchCallback<UnwrappedState<T>>> = [];
+  const listeners = new Set<WatchCallback<UnwrappedState<T>>>();
 
   const {
     plugins = [],
@@ -82,15 +76,9 @@ const defineStore = <
     const newSnapshot = toObjectKeys(state).reduce((acc, key) => {
       const reactiveUnit = state[key];
 
-      if (
-        isReactive(reactiveUnit) ||
-        isComputed(reactiveUnit) ||
-        isQuery(reactiveUnit)
-      ) {
-        acc[key] = reactiveUnit.get() as UnwrappedState<T>[typeof key];
-      } else {
-        acc[key] = reactiveUnit as UnwrappedState<T>[typeof key];
-      }
+      acc[key] = isReactiveUnit(reactiveUnit)
+        ? (reactiveUnit.get() as UnwrappedState<T>[typeof key])
+        : (reactiveUnit as UnwrappedState<T>[typeof key]);
 
       return acc;
     }, {} as UnwrappedState<T>);
@@ -106,38 +94,25 @@ const defineStore = <
 
   let prevState = getSnapshot();
 
-  const subscribe = (callback: WatchCallback<UnwrappedState<T>>) => {
-    listeners.push(callback);
-
-    return () => {
-      const index = listeners.indexOf(callback);
-
-      if (index !== -1) {
-        listeners.splice(index, 1);
-      }
-    };
-  };
-
   const triggerWatchers = (
     newState: UnwrappedState<T>,
     oldState: UnwrappedState<T>,
   ) => {
-    if (!shallowEqual(newState, oldState)) {
-      observeStore(newState, oldState, name);
-      listeners.forEach((listener) => listener(newState, oldState));
-    }
+    observeStore(newState, oldState, name);
+    listeners.forEach((listener) => listener(newState, oldState));
   };
 
   const observeReactivity = () => {
-    const reactiveUnits = Object.keys(state).filter(
-      (key) =>
-        isReactive(state[key]) || isComputed(state[key]) || isQuery(state[key]),
+    const reactiveUnits = Object.keys(state).filter((key) =>
+      isReactiveUnit(state[key]),
     );
+
+    const unsubscribeFunctions = new Set<() => void>();
 
     reactiveUnits.forEach((key) => {
       const reactiveUnit = state[key] as Reactive<unknown>;
 
-      reactiveUnit.subscribe(() => {
+      const unsubscribe = reactiveUnit.subscribe(() => {
         batchManager.addTask(() => {
           const newState = getSnapshot();
 
@@ -147,13 +122,37 @@ const defineStore = <
           }
         });
       });
+
+      unsubscribeFunctions.add(unsubscribe);
     });
+
+    return () => {
+      unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
+      unsubscribeFunctions.clear();
+    };
   };
 
-  initDevtoolsStore(name, prevState);
-  observeReactivity();
+  const cleanupAll = observeReactivity();
 
-  const store: DefineStore<T> = { state, getSnapshot, action, subscribe };
+  const subscribe = (callback: WatchCallback<UnwrappedState<T>>) => {
+    listeners.add(callback);
+
+    return () => {
+      listeners.delete(callback);
+    };
+  };
+
+  Promise.resolve().then(() => {
+    initDevtoolsStore(name, prevState);
+  });
+
+  const store: DefineStore<T> = {
+    state,
+    getSnapshot,
+    action,
+    subscribe,
+    cleanupAll,
+  };
 
   plugins.forEach((plugin) => plugin(store));
 
