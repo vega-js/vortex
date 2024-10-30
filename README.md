@@ -27,8 +27,7 @@
 
 ---
 
-- [Explore the full documentation](https://github.com/vega-js/vortex/blob/main/packages/vortex/docs/main.md)
-- [Dive into more examples and see Vortex in action](https://github.com/vega-js/vortex/blob/main/packages/vortex/docs/examples/main.md)
+- [Explore the full documentation](https://docs-vortex.netlify.app)
 
 ---
 

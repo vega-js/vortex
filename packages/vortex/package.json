@@ -15,13 +15,14 @@
 		"state",
 		"flux"
 	],
-	"homepage": "https://github.com/vega-js/vortex/packages/vortex",
+	"homepage": "https://docs-vortex.netlify.app",
 	"bugs": {
 		"url": "https://github.com/vega-js/vortex/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/vega-js/vortex"
+    "url": "https://github.com/vega-js/vortex",
+    "directory": "packages/vortex"
 	},
 	"sideEffects": false,
 	"license": "MIT",

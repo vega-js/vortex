@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@vegajs/vortex": "^1.0.1",
-    "styled-components": "^6.1.13"
+    "styled-components": "^6.1.13",
+    "remeda": "^2.16.0"
   }
 }

@@ -1,4 +1,7 @@
+import { Button } from '@components/button.tsx';
+import { Card } from '@components/card';
 import { RenderCount } from '@components/render-count';
+import { Text } from '@components/text';
 import { defineStore, useStore } from '@vegajs/vortex';
 
 const appStore = defineStore(({ reactive }) => {
@@ -17,10 +20,11 @@ const NameComponent = () => {
   const { name } = useStore(appStore); // no renders when count changed
 
   return (
-    <div style={{ position: 'relative' }}>
+    <Card>
+      <Text>Child 1</Text>
       <RenderCount />
-      <h2>{name}</h2>
-    </div>
+      <Text>{name}</Text>
+    </Card>
   );
 };
 
@@ -28,11 +32,12 @@ const CountComponent = () => {
   const { count, increment } = useStore(appStore);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <Card style={{ position: 'relative' }}>
+      <Text>Child 2</Text>
       <RenderCount />
-      <p>count: {count}</p>
-      <button onClick={increment}>Increment</button>
-    </div>
+      <Text>count: {count}</Text>
+      <Button onClick={increment}>Increment</Button>
+    </Card>
   );
 };
 
@@ -40,13 +45,16 @@ const AppComponent = () => {
   const { updateName } = useStore(appStore);
 
   return (
-    <>
-      <button onClick={updateName}>update name</button>
+    <Card>
+      <Text>Parent component</Text>
+      <br />
+      <Button onClick={updateName}>update name</Button>
+      <br />
       <br />
       <NameComponent />
       <br />
       <CountComponent />
-    </>
+    </Card>
   );
 };
 

@@ -41,7 +41,8 @@ export default defineConfig({
         title: 'Vortex',
         description: 'A next-gen state management library',
         editLink: {
-          docRepoBaseUrl: 'https://github.com/vega-js/vortex/tree/main/docs',
+          docRepoBaseUrl:
+            'https://github.com/vega-js/vortex/tree/main/docs/docs',
           text: '📝 Edit this page on GitHub',
         },
       },

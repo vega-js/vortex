@@ -1,6 +1,8 @@
 import styled from 'styled-components';
 
 export const Card = styled.div`
+  width: 100%;
+
   padding: 32px;
   border-radius: 24px;
   background: linear-gradient(145deg, #f4f6f9, #ffffff);

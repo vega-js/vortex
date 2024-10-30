@@ -37,12 +37,18 @@ const searchStore = defineStore(({ query, reactive, effect }) => {
   const userQuery = query<User | null, void, string>((name) =>
     usersRepo.getUserByName(name),
   );
+  const debouncedRunQuery = debounce(
+    (searchValue: string) => {
+      userQuery.run(searchValue);
+    },
+    { waitMs: 300 },
+  );
 
   effect(() => {
     const searchValue = search.get();
 
     if (searchValue) {
-      userQuery.run(searchValue);
+      debouncedRunQuery.call(searchValue);
     }
   });
 

@@ -21,62 +21,26 @@ const createSemanticConfig = () => {
         linkReferences: true,
         presetConfig: {
           types: [
-            {
-              type: 'fix',
-              section: '\u{1F41E} Fixes',
-              hidden: false,
-            },
-            {
-              type: 'feat',
-              section: '\u2728 Features',
-              hidden: false,
-            },
-            {
-              type: 'chore',
-              section: '\u{1F6E0}\uFE0F Chores',
-              hidden: false,
-            },
-            {
-              type: 'build',
-              section: '\u{1F4E6} Build',
-              hidden: false,
-            },
-            {
-              type: 'docs',
-              section: '\u{1F4DD}  Docs',
-              hidden: false,
-            },
+            { type: 'fix', section: '\u{1F41E} Fixes', hidden: false },
+            { type: 'feat', section: '✨ Features', hidden: false },
+            { type: 'chore', section: '🛠️ Chores', hidden: false },
+            { type: 'build', section: '📦 Build', hidden: false },
+            { type: 'docs', section: '📝 Docs', hidden: false },
           ],
         },
       },
     ],
     ['@semantic-release/github'],
-
-    // [
-    //   '@semantic-release/changelog',
-    //   {
-    //     changelogFile: 'CHANGELOG.md',
-    //   },
-    // ],
-    // [
-    //   '@semantic-release/git',
-    //   {
-    //     assets: ['package.json', 'CHANGELOG.md'],
-    //     message:
-    //       'chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}',
-    //   },
-    // ],
   ];
 
   return {
     branches: [
       '+([0-9])?(.{+([0-9]),x}).x',
       'main',
-      'next',
       { name: 'beta', prerelease: true },
+      { name: 'next', channel: 'next', prerelease: true },
     ],
     plugins: plugs,
-    // eslint-disable-next-line no-template-curly-in-string
     tagFormat: '${version}',
   };
 };
