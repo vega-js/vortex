@@ -1,0 +1,22 @@
+# Effect
+
+import Effect from "./effect.component";
+
+```mdx
+const effectStore = defineStore(({ reactive, effect }) => {
+  const count = reactive(0);
+  const logEffect = reactive<string | undefined>(undefined);
+
+  effect(() => {
+    logEffect.set(`effect was called with count:${count.get()}`);
+  });
+
+  const increment = () => count.set((prev) => prev + 1);
+
+  return { count, logEffect, increment };
+});
+```
+
+### Result
+
+<Effect />
