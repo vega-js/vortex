@@ -1,0 +1,33 @@
+# DI
+
+import DIComponent from "./DI.component";
+
+```mdx
+import { DIContainer, defineStore, useStore } from '@vegajs/vortex';
+
+type Container = {
+  alert: (message?: string) => void;
+};
+
+const container = new DIContainer<Container>();
+
+container.register('alert', window.alert);
+
+export const DIStore = defineStore(
+  ({ reactive, DI }) => {
+    const count = reactive(0);
+
+    const alert = DI.get('alert');
+    const showAlert = () => alert(`count: ${count.get()}`);
+
+    return { showAlert };
+  },
+  {
+    DI: container,
+  },
+);
+```
+
+### Result
+
+<DIComponent />

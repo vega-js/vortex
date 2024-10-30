@@ -1,0 +1,17 @@
+[
+  {
+    "type": "dir",
+    "name": "start",
+    "label": "Getting Started"
+  },
+  {
+    "type": "dir",
+    "name": "examples",
+    "label": "Examples"
+  },
+  {
+    "type": "dir",
+    "name": "api",
+    "label": "Vortex API"
+  }
+]

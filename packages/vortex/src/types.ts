@@ -65,6 +65,7 @@ export type DefineStore<T extends UnknownState> = {
   subscribe(callback: WatchCallback<UnwrappedState<T>>): () => void;
   getSnapshot(): UnwrappedState<T>;
   action(cb: (state: T) => void): void;
+  cleanupAll(): void;
 };
 
 export type DefineApi<Deps = Record<string, unknown> | undefined> = {
