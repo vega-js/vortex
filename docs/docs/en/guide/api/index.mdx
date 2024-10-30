@@ -1,0 +1,118 @@
+---
+name: Vortex API
+---
+
+# Vortex API
+
+### `DefineStore<T>`
+
+Describes a store structure with its state, subscription methods, and utility functions for action execution and cleanup.
+
+- **`state: T`** - The initial state of the store.
+- **`subscribe(callback: WatchCallback<UnwrappedState<T>>): () => void`** - Subscribes to state changes and returns an unsubscribe function.
+- **`getSnapshot(): UnwrappedState<T>`** - Returns a snapshot of the current state.
+- **`action(cb: (state: T) => void): void`** - Executes a function with access to the store state.
+- **`cleanupAll(): void`** - Cleans up all subscriptions and effects in the store.
+
+---
+
+### `DefineApi<Deps>`
+
+The primary API for defining and managing reactive states, computed states, and queries. Provides dependency injection and effect handling.
+
+- **`reactive<Value>(initialValue: Value): Reactive<Value>`** - Creates a reactive state.
+- **`computed<T>(fn: () => T): Computed<T>`** - Creates a computed state, derived from other reactive or computed states.
+- **`effect(fn: () => void): void`** - Registers an effect that reacts to reactive or computed state changes.
+- **`DI: Deps extends undefined ? never : DIContainer<Deps>`** - Dependency Injection (DI) container for accessing dependencies, if provided.
+- **`query<Data, TError, TOptions>(cb: (options: TOptions) => Promise<Data>, options?: QueryOptions<Data, TError>): Query<Data, TError, TOptions>`** - Creates a query to manage async data fetching with support for loading, error, and success states.
+
+---
+
+### `StoreOptions<T, Deps>`
+
+Options for configuring a store, including plugins, DI container, and store name.
+
+- **`plugins?: Plugin<T>[]`** - Array of plugins to enhance the store functionality.
+- **`DI?: DIContainer<Deps>`** - Dependency Injection container for providing external dependencies.
+- **`name?: string`** - Optional name for the store, useful for debugging or devtools.
+
+---
+
+### `Reactive<Value>`
+
+Defines a reactive state with functions to get and set its value, subscribe to changes, and reset it. This type allows for mutable, reactive state management.
+
+- **`get(): Value`** - Retrieves the current state value.
+- **`set(value: Value | ((prevValue: Value) => Value)): void`** - Updates the state value; accepts a direct value or a function that receives the previous value and returns the updated one.
+- **`subscribe(callback: (value: Value) => void): () => void`** - Adds a listener for state changes. Returns an unsubscribe function to remove the listener.
+- **`reset(): void`** - Resets the state to its initial value.
+- **`type: 'reactive'`** - Type descriptor to identify the state as reactive.
+
+---
+
+### `Computed<Value>`
+
+Represents computed (derived) state, calculated from other states and updated automatically when dependencies change.
+
+- **`get(): Value`** - Retrieves the computed value.
+- **`subscribe(callback: (value: Value) => void): () => void`** - Adds a listener to computed state changes. Returns an unsubscribe function to remove the listener.
+- **`type: 'computed'`** - Type descriptor for computed state.
+
+---
+
+### `QueryData<Data, TError>`
+
+Describes the data structure for queries, supporting error handling and loading states.
+
+- **`isLoading: boolean`** - Indicates if the query is in a loading state.
+- **`isSuccess: boolean`** - Indicates if the query has successfully loaded data.
+- **`isError: boolean`** - Indicates if there was an error with the query.
+- **`error: TError | null`** - Holds error details if any occurred.
+- **`data: Data | undefined`** - Contains the fetched data or remains undefined if not loaded.
+
+---
+
+### `QueryOptions<TData, TError>`
+
+Optional configuration for queries, allowing control over autorun and event handling for successful or failed data fetching.
+
+- **`isAutorun?: boolean`** - Enables the query to automatically run on initialization.
+- **`onSuccess?: (data: TData) => void`** - Callback triggered when data is successfully fetched.
+- **`onError?: (error: TError) => void`** - Callback triggered when an error occurs during data fetching.
+
+---
+
+### `Query<Data, TError, TOptions>`
+
+Defines a query type for handling async data fetching and state management, supporting various states and refetching mechanisms.
+
+- **`get(): QueryData<Data, TError>`** - Retrieves the current query state, including data, loading, success, and error status.
+- **`set(value: QueryData<Data, TError> | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>)): void`** - Updates the query state, accepting a new state or a function that derives it from the previous state.
+- **`subscribe(callback: (value: QueryData<Data, TError>) => void): () => void`** - Adds a listener to query state changes. Returns an unsubscribe function to remove the listener.
+- **`type: 'query'`** - Type descriptor for identifying the query type.
+- **`reset(): void`** - Resets the query to its initial state.
+- **`refetch(): Promise<void>`** - Refetches the data, re-triggering the query with the initial parameters.
+- **`run(options: TOptions): Promise<void>`** - Executes the query with the specified options.
+
+---
+
+### `UnwrappedState<T>`
+
+Utility type for extracting the raw state values from `Reactive`, `Computed`, and `Query` types in a store.
+
+- Maps through the store's state properties, extracting the underlying values for each type of reactive data.
+
+---
+
+### `Plugin<T>`
+
+Type for plugins that extend the functionality of a store.
+
+- **Parameters**:
+- `store: DefineStore<T>` - The store instance being extended.
+
+---
+
+### `DIContainer`
+
+A type placeholder representing a dependency injection container. It enables the injection of dependencies into the store, aiding modularity and testability.

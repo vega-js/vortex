@@ -1,0 +1,34 @@
+# Vanilla
+
+```mdx
+
+const appStore = defineStore(({ reactive }) => {
+  const count = reactive(0);
+  const increment = () => count.set((prev) => prev + 1);
+
+  return { count, increment };
+});
+
+const appElement = document.createElement('div');
+
+appElement.id = 'app';
+document.body.appendChild(appElement);
+
+const counterText = document.createElement('p');
+
+counterText.textContent = `Count: 0`;
+appElement.appendChild(counterText);
+
+const incrementButton = document.createElement('button');
+
+incrementButton.textContent = 'Increment';
+appElement.appendChild(incrementButton);
+
+appStore.subscribe((newState) => {
+  counterText.textContent = `Count: ${newState.count}`;
+});
+
+incrementButton.addEventListener('click', () => {
+  appStore.state.increment();
+});
+```
