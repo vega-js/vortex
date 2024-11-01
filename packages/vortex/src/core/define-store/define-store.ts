@@ -26,7 +26,7 @@ const defineStore = <
 ): DefineStore<T> => {
   const batchManager = new BatchManager();
 
-  const listeners = new Set<WatchCallback<UnwrappedState<T>>>();
+  const listeners: WatchCallback<UnwrappedState<T>>[] = [];
 
   const {
     plugins = [],
@@ -107,7 +107,7 @@ const defineStore = <
       isReactiveUnit(state[key]),
     );
 
-    const unsubscribeFunctions = new Set<() => void>();
+    const unsubscribeFunctions: (() => void)[] = [];
 
     reactiveUnits.forEach((key) => {
       const reactiveUnit = state[key] as Reactive<unknown>;
@@ -123,22 +123,28 @@ const defineStore = <
         });
       });
 
-      unsubscribeFunctions.add(unsubscribe);
+      unsubscribeFunctions.push(unsubscribe);
     });
 
     return () => {
       unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
-      unsubscribeFunctions.clear();
+      unsubscribeFunctions.length = 0;
     };
   };
 
   const cleanupAll = observeReactivity();
 
   const subscribe = (callback: WatchCallback<UnwrappedState<T>>) => {
-    listeners.add(callback);
+    if (!listeners.includes(callback)) {
+      listeners.push(callback);
+    }
 
     return () => {
-      listeners.delete(callback);
+      const index = listeners.indexOf(callback);
+
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
     };
   };
 

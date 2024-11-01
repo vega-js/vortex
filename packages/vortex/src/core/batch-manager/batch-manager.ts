@@ -1,10 +1,10 @@
 export class BatchManager {
   private isBatching = false;
 
-  private batchedTasks = new Set<() => void>();
+  private batchedTasks: (() => void)[] = [];
 
   public addTask(task: () => void) {
-    this.batchedTasks.add(task);
+    this.batchedTasks.push(task);
     this.batchUpdates();
   }
 
@@ -20,7 +20,12 @@ export class BatchManager {
   }
 
   private triggerBatchedTasks() {
-    this.batchedTasks.forEach((task) => task());
-    this.batchedTasks.clear();
+    const tasksToRun = this.batchedTasks.slice();
+
+    this.batchedTasks.length = 0;
+
+    tasksToRun.forEach((task) => {
+      task();
+    });
   }
 }

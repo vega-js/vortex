@@ -1,13 +1,17 @@
 export class ReactiveContext {
   private stack: Array<() => void> = [];
 
-  track(fn: () => void) {
+  private currentActive: (() => void) | null = null;
+
+  public track(fn: () => void) {
     this.stack.push(fn);
+    this.currentActive = fn;
     fn();
     this.stack.pop();
+    this.currentActive = this.stack[this.stack.length - 1] || null;
   }
 
-  getActive() {
-    return this.stack[this.stack.length - 1];
+  public getActive() {
+    return this.currentActive;
   }
 }

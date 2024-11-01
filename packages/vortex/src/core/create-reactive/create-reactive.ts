@@ -5,13 +5,11 @@ export const createReactive = <Value>(
   initialValue: Value,
   context: ReactiveContext,
 ): Reactive<Value> => {
-  const callbacks = new Set<(value: Value) => void>();
+  const callbacks: ((value: Value) => void)[] = [];
   let currentValue = initialValue;
 
   const notifySubscribers = () => {
-    callbacks.forEach((callback) => {
-      callback(currentValue);
-    });
+    callbacks.forEach((callback) => callback(currentValue));
   };
 
   return {
@@ -20,8 +18,8 @@ export const createReactive = <Value>(
     get() {
       const activeReactive = context.getActive();
 
-      if (activeReactive && !callbacks.has(activeReactive)) {
-        callbacks.add(activeReactive);
+      if (activeReactive) {
+        callbacks.push(activeReactive);
       }
 
       return currentValue;
@@ -30,7 +28,7 @@ export const createReactive = <Value>(
     set(value) {
       const newValue =
         typeof value === 'function'
-          ? (value as (prevValue: Value) => Value)(currentValue)
+          ? (value as (prev: Value) => Value)(currentValue)
           : value;
 
       if (newValue !== currentValue) {
@@ -40,20 +38,20 @@ export const createReactive = <Value>(
     },
 
     subscribe(callback) {
-      if (!callbacks.has(callback)) {
-        callbacks.add(callback);
-      }
+      callbacks.push(callback);
 
       return () => {
-        callbacks.delete(callback);
+        const index = callbacks.indexOf(callback);
+
+        if (index !== -1) {
+          callbacks.splice(index, 1);
+        }
       };
     },
 
     reset() {
-      if (currentValue !== initialValue) {
-        currentValue = initialValue;
-        notifySubscribers();
-      }
+      currentValue = initialValue;
+      notifySubscribers();
     },
   };
 };
