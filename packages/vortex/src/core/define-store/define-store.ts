@@ -1,6 +1,5 @@
 import type {
   DefineApi,
-  DefineLocalApi,
   DefineStore,
   QueryOptions,
   Reactive,
@@ -51,29 +50,22 @@ const defineStore = <
     queryOptions?: QueryOptions<Data, TError>,
   ) => createQuery<Data, TError, TOptions>(cb, localContext, queryOptions);
 
-  const createApi = () => {
-    const creators: DefineLocalApi<DIDeps> = {
-      reactive,
-      computed,
-      effect,
-      query,
-    };
+  const state = setup({
+    reactive,
+    computed,
+    effect,
+    query,
+    DI,
+  } as DefineApi<DIDeps>);
 
-    if (DI) {
-      creators.DI = DI;
-    }
-
-    return creators as DefineApi<DIDeps>;
-  };
-
-  const state = setup(createApi());
+  const stateKeys = toObjectKeys(state);
 
   const action = (cb: (state: T) => unknown) => {
     cb(state);
   };
 
   const getSnapshot = () => {
-    const newSnapshot = toObjectKeys(state).reduce((acc, key) => {
+    const newSnapshot = stateKeys.reduce((acc, key) => {
       const reactiveUnit = state[key];
 
       acc[key] = isReactiveUnit(reactiveUnit)
@@ -101,26 +93,39 @@ const defineStore = <
     observeStore(newState, oldState, name);
     listeners.forEach((listener) => listener(newState, oldState));
   };
-
   const observeReactivity = () => {
-    const reactiveUnits = Object.keys(state).filter((key) =>
-      isReactiveUnit(state[key]),
-    );
-
     const unsubscribeFunctions: (() => void)[] = [];
+    const reactiveUnits = stateKeys.filter((key) => isReactiveUnit(state[key]));
+
+    let batchedState: UnwrappedState<T> | null = null;
+    let isBatchScheduled = false;
+
+    const triggerBatchUpdate = () => {
+      if (!isBatchScheduled) {
+        isBatchScheduled = true;
+
+        batchManager.addTask(() => {
+          if (batchedState) {
+            triggerWatchers(batchedState, prevState);
+            prevState = batchedState;
+            batchedState = null;
+          }
+
+          isBatchScheduled = false;
+        });
+      }
+    };
 
     reactiveUnits.forEach((key) => {
       const reactiveUnit = state[key] as Reactive<unknown>;
 
-      const unsubscribe = reactiveUnit.subscribe(() => {
-        batchManager.addTask(() => {
-          const newState = getSnapshot();
+      const unsubscribe = reactiveUnit.subscribe((value) => {
+        if (!batchedState) {
+          batchedState = { ...prevState };
+        }
 
-          if (!shallowEqual(newState[key], prevState[key])) {
-            triggerWatchers(newState, prevState);
-            prevState = newState;
-          }
-        });
+        batchedState[key] = value as UnwrappedState<T>[typeof key];
+        triggerBatchUpdate();
       });
 
       unsubscribeFunctions.push(unsubscribe);

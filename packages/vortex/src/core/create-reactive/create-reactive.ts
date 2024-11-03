@@ -19,7 +19,9 @@ export const createReactive = <Value>(
       const activeReactive = context.getActive();
 
       if (activeReactive) {
-        callbacks.push(activeReactive);
+        if (!callbacks.includes(activeReactive)) {
+          callbacks.push(activeReactive);
+        }
       }
 
       return currentValue;
@@ -38,7 +40,9 @@ export const createReactive = <Value>(
     },
 
     subscribe(callback) {
-      callbacks.push(callback);
+      if (!callbacks.includes(callback)) {
+        callbacks.push(callback);
+      }
 
       return () => {
         const index = callbacks.indexOf(callback);

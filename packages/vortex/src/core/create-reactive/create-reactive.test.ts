@@ -10,7 +10,7 @@ describe('createReactive', () => {
     expect(reactive.get()).toBe(10);
   });
 
-  it('should update the value with set', () => {
+  it('should update the value with set and reflect it in get', () => {
     const context = new ReactiveContext();
     const reactive = createReactive(10, context);
 
@@ -44,7 +44,18 @@ describe('createReactive', () => {
     expect(subscriber).not.toHaveBeenCalled();
   });
 
-  it('should reset the value to initial', () => {
+  it('should not notify subscribers if the value remains the same', () => {
+    const context = new ReactiveContext();
+    const reactive = createReactive(10, context);
+
+    const subscriber = vi.fn();
+
+    reactive.subscribe(subscriber);
+    reactive.set(10);
+    expect(subscriber).not.toHaveBeenCalled();
+  });
+
+  it('should reset the value to the initial value', () => {
     const context = new ReactiveContext();
     const reactive = createReactive(10, context);
 
@@ -52,6 +63,14 @@ describe('createReactive', () => {
     expect(reactive.get()).toBe(50);
     reactive.reset();
     expect(reactive.get()).toBe(10);
+  });
+
+  it('should allow setting the value with a function', () => {
+    const context = new ReactiveContext();
+    const reactive = createReactive(10, context);
+
+    reactive.set((prev) => prev + 5);
+    expect(reactive.get()).toBe(15);
   });
 
   it('should track active functions via context', () => {
@@ -66,5 +85,49 @@ describe('createReactive', () => {
     });
 
     expect(tracker).toHaveBeenCalled();
+  });
+
+  it('should not add duplicate subscribers', () => {
+    const context = new ReactiveContext();
+    const reactive = createReactive(10, context);
+
+    const subscriber = vi.fn();
+
+    reactive.subscribe(subscriber);
+    reactive.subscribe(subscriber);
+    reactive.set(20);
+    expect(subscriber).toHaveBeenCalledTimes(1);
+    expect(subscriber).toHaveBeenCalledWith(20);
+  });
+
+  it('should correctly handle multiple independent reactives', () => {
+    const context = new ReactiveContext();
+    const reactive1 = createReactive(10, context);
+    const reactive2 = createReactive(20, context);
+
+    expect(reactive1.get()).toBe(10);
+    expect(reactive2.get()).toBe(20);
+    reactive1.set(15);
+    expect(reactive1.get()).toBe(15);
+    expect(reactive2.get()).toBe(20);
+  });
+
+  it('should notify only relevant subscribers', () => {
+    const context = new ReactiveContext();
+    const reactive = createReactive(10, context);
+
+    const subscriber1 = vi.fn();
+    const subscriber2 = vi.fn();
+
+    const unsubscribe1 = reactive.subscribe(subscriber1);
+
+    reactive.subscribe(subscriber2);
+    reactive.set(20);
+    expect(subscriber1).toHaveBeenCalledTimes(1);
+    expect(subscriber2).toHaveBeenCalledTimes(1);
+    unsubscribe1();
+    reactive.set(30);
+    expect(subscriber1).toHaveBeenCalledTimes(1);
+    expect(subscriber2).toHaveBeenCalledTimes(2);
   });
 });

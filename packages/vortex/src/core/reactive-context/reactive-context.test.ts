@@ -17,6 +17,6 @@ describe('ReactiveContext', () => {
 
     context.track(fn1);
     context.track(fn2);
-    expect(context.getActive()).toBeUndefined();
+    expect(context.getActive()).toBe(null);
   });
 });
