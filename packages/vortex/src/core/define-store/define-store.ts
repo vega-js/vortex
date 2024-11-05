@@ -21,21 +21,16 @@ const defineStore = <
   DIDeps extends Record<string, unknown> | undefined = undefined,
 >(
   setup: (args: DefineApi<DIDeps>) => T,
-  options?: StoreOptions<T, DIDeps>,
+  options: StoreOptions<T, DIDeps> = {},
 ): DefineStore<T> => {
   const batchManager = new BatchManager();
-
-  const listeners: WatchCallback<UnwrappedState<T>>[] = [];
-
-  const {
-    plugins = [],
-    DI,
-    name = `unknown_${new Date().toISOString()}`,
-  } = options || {};
-
   const localContext = new ReactiveContext();
+  const listeners: Record<number, WatchCallback<UnwrappedState<T>>> = {};
+  let listenerCounter = 0;
 
   let memoizedSnapshot: UnwrappedState<T> | null = null;
+
+  const { plugins = [], DI, name = `unknown_${Date.now()}` } = options;
 
   const reactive = <Value>(initialValue: Value) =>
     createReactive(initialValue, localContext);
@@ -60,28 +55,25 @@ const defineStore = <
 
   const stateKeys = toObjectKeys(state);
 
-  const action = (cb: (state: T) => unknown) => {
-    cb(state);
-  };
-
   const getSnapshot = () => {
-    const newSnapshot = stateKeys.reduce((acc, key) => {
+    const newSnapshot: Partial<UnwrappedState<T>> = {};
+
+    for (let i = 0; i < stateKeys.length; i++) {
+      const key = stateKeys[i];
       const reactiveUnit = state[key];
 
-      acc[key] = isReactiveUnit(reactiveUnit)
+      newSnapshot[key] = isReactiveUnit(reactiveUnit)
         ? (reactiveUnit.get() as UnwrappedState<T>[typeof key])
         : (reactiveUnit as UnwrappedState<T>[typeof key]);
-
-      return acc;
-    }, {} as UnwrappedState<T>);
+    }
 
     if (memoizedSnapshot && shallowEqual(newSnapshot, memoizedSnapshot)) {
       return memoizedSnapshot;
     }
 
-    memoizedSnapshot = newSnapshot;
+    memoizedSnapshot = newSnapshot as UnwrappedState<T>;
 
-    return newSnapshot;
+    return memoizedSnapshot;
   };
 
   let prevState = getSnapshot();
@@ -91,8 +83,12 @@ const defineStore = <
     oldState: UnwrappedState<T>,
   ) => {
     observeStore(newState, oldState, name);
-    listeners.forEach((listener) => listener(newState, oldState));
+
+    Object.values(listeners).forEach((listener) =>
+      listener(newState, oldState),
+    );
   };
+
   const observeReactivity = () => {
     const unsubscribeFunctions: (() => void)[] = [];
     const reactiveUnits = stateKeys.filter((key) => isReactiveUnit(state[key]));
@@ -116,7 +112,8 @@ const defineStore = <
       }
     };
 
-    reactiveUnits.forEach((key) => {
+    for (let i = 0; i < reactiveUnits.length; i++) {
+      const key = reactiveUnits[i];
       const reactiveUnit = state[key] as Reactive<unknown>;
 
       const unsubscribe = reactiveUnit.subscribe((value) => {
@@ -129,27 +126,28 @@ const defineStore = <
       });
 
       unsubscribeFunctions.push(unsubscribe);
-    });
+    }
 
     return () => {
-      unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
-      unsubscribeFunctions.length = 0;
+      for (let i = 0; i < unsubscribeFunctions.length; i++) {
+        unsubscribeFunctions[i]();
+      }
     };
+  };
+
+  const action = (cb: (state: T) => unknown) => {
+    cb(state);
   };
 
   const cleanupAll = observeReactivity();
 
   const subscribe = (callback: WatchCallback<UnwrappedState<T>>) => {
-    if (!listeners.includes(callback)) {
-      listeners.push(callback);
-    }
+    const id = listenerCounter++;
+
+    listeners[id] = callback;
 
     return () => {
-      const index = listeners.indexOf(callback);
-
-      if (index > -1) {
-        listeners.splice(index, 1);
-      }
+      delete listeners[id];
     };
   };
 
