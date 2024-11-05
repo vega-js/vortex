@@ -80,10 +80,6 @@ export type DefineApi<Deps = Record<string, unknown> | undefined> = {
   ) => Query<Data, TError, TOptions>;
 };
 
-export type DefineLocalApi<DIDeps> = Omit<DefineApi, 'DI'> & {
-  DI?: DIContainer<DIDeps>;
-};
-
 export type Plugin<T extends UnknownState> = (store: DefineStore<T>) => void;
 
 export type StoreOptions<
