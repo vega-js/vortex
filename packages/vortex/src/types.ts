@@ -71,7 +71,7 @@ export type DefineStore<T extends UnknownState> = {
 export type DefineApi<Deps = Record<string, unknown> | undefined> = {
   reactive: <Value>(initialValue: Value) => Reactive<Value>;
   computed: <T>(fn: () => T) => Computed<T>;
-  effect: (fn: () => void) => void;
+  effect: (fn: () => void) => () => void;
   DI: Deps extends undefined ? never : DIContainer<Deps>;
 
   query: <Data, TError, TOptions = void>(
