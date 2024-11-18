@@ -42,7 +42,7 @@ import { defineStore } from '@vegajs/vortex';
 
 const counterStore = defineStore(({ reactive, computed }) => {
   const count = reactive(0);
-  const doubleCount = computed(() => count.get() * 2);
+  const doubleCount = computed(() => count.value * 2);
 
   return { count, doubleCount };
 });
@@ -99,7 +99,7 @@ const store = defineStore(({ reactive, effect }) => {
   const message = reactive('Hello, Vortex!');
 
   effect(() => {
-    console.log(`Message changed to: ${message.get()}`);
+    console.log(`Message changed to: ${message.value}`);
   });
 
   return { message };
@@ -128,7 +128,7 @@ const store = defineStore(
 
     const increment = () => {
       count.set(prev => prev + 1);
-      logger.log(`Count incremented to: ${count.get()}`);
+      logger.log(`Count incremented to: ${count.value}`);
     };
 
     return { count, increment };
@@ -354,7 +354,7 @@ const store = defineStore(({ reactive, effect }) => {
   const isActive = reactive(false);
 
   effect(() => {
-    if (isActive.get()) {
+    if (isActive.value) {
       console.log('Activated!');
     } else {
       console.log('Deactivated!');

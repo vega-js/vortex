@@ -46,6 +46,11 @@
 			"require": "./dist/core/index.js",
 			"types": "./dist/core/index.d.ts"
 		},
+    "./reactivity": {
+      "import": "./dist/reactivity.js",
+      "require": "./dist/reactivity.js",
+      "types": "./dist/reactivity.d.ts"
+    },
 		"./plugins": {
 			"import": "./dist/plugins/index.js",
 			"require": "./dist/plugins/index.js",
