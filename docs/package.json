@@ -25,7 +25,7 @@
     "rspress-plugin-sitemap": "^1.1.1"
   },
   "dependencies": {
-    "@vegajs/vortex": "1.0.3-beta.8",
+    "@vegajs/vortex": "1.0.3-beta.10",
     "styled-components": "^6.1.13",
     "remeda": "^2.16.0"
   }
