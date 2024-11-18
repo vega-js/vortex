@@ -1,7 +1,7 @@
 {
 	"name": "@vegajs/vortex",
 	"version": "0.0.0",
-  "description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
+	"description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
 	"keywords": [
 		"state management",
 		"state",
@@ -21,37 +21,37 @@
 	},
 	"repository": {
 		"type": "git",
-    "url": "https://github.com/vega-js/vortex",
-    "directory": "packages/vortex"
+		"url": "https://github.com/vega-js/vortex",
+		"directory": "packages/vortex"
 	},
 	"sideEffects": false,
 	"license": "MIT",
 	"author": "Andrey Zlobin",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./react": {
-      "import": "./dist/react/index.js",
-      "require": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
-    },
-    "./vanilla": {
-      "import": "./dist/core/index.js",
-      "require": "./dist/core/index.js",
-      "types": "./dist/core/index.d.ts"
-    },
-    "./plugins": {
-      "import": "./dist/plugins/index.js",
-      "require": "./dist/plugins/index.js",
-      "types": "./dist/plugins/index.d.ts"
-    }
-  },
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		},
+		"./react": {
+			"import": "./dist/react/index.js",
+			"require": "./dist/react/index.js",
+			"types": "./dist/react/index.d.ts"
+		},
+		"./vanilla": {
+			"import": "./dist/core/index.js",
+			"require": "./dist/core/index.js",
+			"types": "./dist/core/index.d.ts"
+		},
+		"./plugins": {
+			"import": "./dist/plugins/index.js",
+			"require": "./dist/plugins/index.js",
+			"types": "./dist/plugins/index.d.ts"
+		}
+	},
 	"files": ["dist", "README.md"],
 	"scripts": {
 		"build": "modern build",

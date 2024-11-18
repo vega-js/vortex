@@ -23,7 +23,6 @@ describe('BatchManager', () => {
     const mockTask1 = vi.fn();
     const mockTask2 = vi.fn();
 
-    // Добавляем несколько задач
     batchManager.addTask(mockTask1);
     batchManager.addTask(mockTask2);
     expect(mockTask1).not.toHaveBeenCalled();

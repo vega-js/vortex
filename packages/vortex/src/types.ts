@@ -3,7 +3,7 @@ import type { DIContainer } from './core';
 type UnknownState = Record<string, unknown>;
 
 export type Reactive<Value> = {
-  get: () => Value;
+  get value(): Value;
   set: (value: Value | ((prevValue: Value) => Value)) => void;
   subscribe: (callback: (value: Value) => void) => () => void;
   reset: () => void;
@@ -11,7 +11,7 @@ export type Reactive<Value> = {
 };
 
 export type Computed<Value> = {
-  get: () => Value;
+  get value(): Value;
   subscribe: (callback: (value: Value) => void) => () => void;
   type: 'computed';
 };
@@ -31,7 +31,7 @@ export type QueryOptions<TData, TError> = {
 };
 
 export type Query<Data, TError, TOptions> = {
-  get: () => QueryData<Data, TError>;
+  get value(): QueryData<Data, TError>;
   set: (
     value:
       | QueryData<Data, TError>

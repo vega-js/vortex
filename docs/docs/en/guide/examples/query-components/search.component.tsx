@@ -23,7 +23,7 @@ const searchStore = defineStore(({ query, reactive, effect }) => {
   );
 
   effect(() => {
-    const searchValue = search.get();
+    const searchValue = search.value;
 
     if (searchValue) {
       debouncedRunQuery.call(searchValue);

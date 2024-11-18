@@ -1,41 +1,51 @@
-import type { BatchManager } from '../batch-manager';
 import type { ReactiveContext } from '../reactive-context';
 
-export const createEffect = (
-  fn: () => (() => void) | void,
-  context: ReactiveContext,
-  batchManager: BatchManager,
-) => {
-  let cleanup: (() => void) | undefined;
-  let isActive = true;
+export class Effect {
+  private cleanup: (() => void) | undefined;
 
-  const runEffect = () => {
-    if (!isActive) {
+  private isActive = true;
+
+  constructor(
+    private readonly fn: () => (() => void) | void,
+    private readonly context: ReactiveContext,
+  ) {
+    Promise.resolve().then(() => {
+      this.initializeEffect();
+    });
+  }
+
+  private executor = () => {
+    if (!this.isActive) {
       return;
     }
 
-    if (cleanup) {
-      cleanup();
-    }
-
-    context.track(() => {
-      if (!isActive) {
-        return;
+    try {
+      if (this.cleanup) {
+        this.cleanup();
       }
 
-      cleanup = fn() as (() => void) | undefined;
-    });
+      this.cleanup = this.fn() as (() => void) | undefined;
+    } finally {
+    }
   };
 
-  Promise.resolve().then(() => {
-    batchManager.addTask(runEffect);
-  });
-
-  return () => {
-    if (cleanup) {
-      cleanup();
+  private initializeEffect() {
+    if (!this.isActive) {
+      return;
     }
 
-    isActive = false;
-  };
-};
+    if (this.cleanup) {
+      this.cleanup();
+    }
+
+    this.context.track(this.executor);
+  }
+
+  public stop() {
+    if (this.cleanup) {
+      this.cleanup();
+    }
+
+    this.isActive = false;
+  }
+}

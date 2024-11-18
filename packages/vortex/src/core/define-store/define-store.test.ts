@@ -88,10 +88,10 @@ describe('defineStore', () => {
 
     const store = defineStore(({ reactive, computed, effect }) => {
       const count = reactive(1);
-      const doubleCount = computed(() => count.get() * 2);
+      const doubleCount = computed(() => count.value * 2);
 
       effect(() => {
-        effectCallback(doubleCount.get());
+        effectCallback(doubleCount.value);
       });
 
       return { count, doubleCount };
@@ -178,7 +178,7 @@ describe('defineStore', () => {
       const count = reactive(0);
 
       effect(() => {
-        effectCallback(count.get());
+        effectCallback(count.value);
       });
 
       return { count };

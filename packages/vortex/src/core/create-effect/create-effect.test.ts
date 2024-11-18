@@ -1,22 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { BatchManager } from '../batch-manager';
+import { describe, expect, it, vi } from 'vitest';
 import { ReactiveContext } from '../reactive-context';
-import { createEffect } from './create-effect';
+import { Effect } from './create-effect';
 
 const waitMacro = async () => Promise.resolve();
 
 describe('createEffect with batching', () => {
-  let batchManager: BatchManager;
-
-  beforeEach(() => {
-    batchManager = new BatchManager();
-  });
-
   it('should call the provided function immediately', async () => {
     const context = new ReactiveContext();
     const fn = vi.fn();
 
-    createEffect(fn, context, batchManager);
+    new Effect(fn, context);
     await waitMacro();
     expect(fn).toHaveBeenCalledTimes(1);
   });
@@ -26,20 +19,9 @@ describe('createEffect with batching', () => {
     const trackSpy = vi.spyOn(context, 'track');
     const fn = vi.fn();
 
-    createEffect(fn, context, batchManager);
+    new Effect(fn, context);
     await waitMacro();
     expect(trackSpy).toHaveBeenCalledWith(expect.any(Function));
-  });
-
-  it('should batch updates using BatchManager', async () => {
-    const context = new ReactiveContext();
-    const fn = vi.fn();
-    const batchSpy = vi.spyOn(batchManager, 'addTask');
-
-    createEffect(fn, context, batchManager);
-    await waitMacro();
-    expect(batchSpy).toHaveBeenCalled();
-    expect(fn).toHaveBeenCalledTimes(1);
   });
 
   it('should allow multiple effects to be batched together', async () => {
@@ -47,8 +29,8 @@ describe('createEffect with batching', () => {
     const fn1 = vi.fn();
     const fn2 = vi.fn();
 
-    createEffect(fn1, context, batchManager);
-    createEffect(fn2, context, batchManager);
+    new Effect(fn1, context);
+    new Effect(fn2, context);
     await waitMacro();
     expect(fn1).toHaveBeenCalledTimes(1);
     expect(fn2).toHaveBeenCalledTimes(1);
@@ -58,7 +40,7 @@ describe('createEffect with batching', () => {
     const context = new ReactiveContext();
     const fn = vi.fn();
 
-    createEffect(fn, context, batchManager);
+    new Effect(fn, context);
     await waitMacro();
     expect(fn).toHaveBeenCalledTimes(1);
     // Simulate dependency change
@@ -71,7 +53,7 @@ describe('createEffect with batching', () => {
     const context = new ReactiveContext();
     const fn = vi.fn();
 
-    createEffect(fn, context, batchManager);
+    new Effect(fn, context);
     await waitMacro();
     expect(fn).toHaveBeenCalledTimes(1);
     context.track(fn);
@@ -84,7 +66,7 @@ describe('createEffect with batching', () => {
     const context = new ReactiveContext();
     const fn = vi.fn();
 
-    createEffect(fn, context, batchManager);
+    new Effect(fn, context);
     await waitMacro();
     expect(fn).toHaveBeenCalledTimes(1);
     await waitMacro();
@@ -97,7 +79,8 @@ describe('createEffect with batching', () => {
       await new Promise((resolve) => setTimeout(resolve, 50));
     });
 
-    createEffect(fn, context, batchManager);
+    // @ts-ignore
+    new Effect(fn, context);
     await waitMacro();
     expect(fn).toHaveBeenCalledTimes(1);
   });
@@ -107,8 +90,8 @@ describe('createEffect with batching', () => {
     const fn1 = vi.fn();
     const fn2 = vi.fn();
 
-    createEffect(fn1, context, batchManager);
-    createEffect(fn2, context, batchManager);
+    new Effect(fn1, context);
+    new Effect(fn2, context);
     await waitMacro();
     expect(fn1).toHaveBeenCalledTimes(1);
     expect(fn2).toHaveBeenCalledTimes(1);

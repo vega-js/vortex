@@ -1,79 +1,109 @@
 import type { Query, QueryData, QueryOptions } from '../../types';
-import { createReactive } from '../create-reactive';
+import { ReactiveValue } from '../create-reactive';
 import type { ReactiveContext } from '../reactive-context';
 
-const createInitial = () => ({
+const createInitial = <Data, TError>() => ({
   isLoading: false,
   isSuccess: false,
   isError: false,
-  error: null,
-  data: undefined,
+  error: null as TError | null,
+  data: undefined as Data | undefined,
 });
 
-export const createQuery = <Data, TError, TOptions>(
-  asyncFn: (options: TOptions) => Promise<Data>,
-  context: ReactiveContext,
-  options?: QueryOptions<Data, TError>,
-): Query<Data, TError, TOptions> => {
-  let lastOptions: TOptions;
-  const { isAutorun = false, onError, onSuccess } = options || {};
+export class QueryHandler<Data, TError, TOptions>
+  implements Query<Data, TError, TOptions>
+{
+  private state: ReactiveValue<QueryData<Data, TError>>;
 
-  const state = createReactive<QueryData<Data, TError>>(
-    createInitial(),
-    context,
-  );
+  private readonly asyncFn: (options: TOptions) => Promise<Data>;
 
-  const setLoading = () =>
-    state.set({
-      ...state.get(),
+  private lastOptions: TOptions | undefined;
+
+  private readonly onError?: (error: TError) => void;
+
+  private readonly onSuccess?: (data: Data) => void;
+
+  public type = 'query' as const;
+
+  constructor(
+    asyncFn: (options: TOptions) => Promise<Data>,
+    context: ReactiveContext,
+    options?: QueryOptions<Data, TError>,
+  ) {
+    this.asyncFn = asyncFn;
+    this.state = new ReactiveValue(createInitial<Data, TError>(), context);
+    this.lastOptions = undefined;
+    this.onError = options?.onError;
+    this.onSuccess = options?.onSuccess;
+
+    if (options?.isAutorun) {
+      this.run(undefined as TOptions);
+    }
+  }
+
+  public get value() {
+    return this.state.value;
+  }
+
+  public set = (
+    value:
+      | QueryData<Data, TError>
+      | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>),
+  ) => this.state.set(value);
+
+  public subscribe = (callback: (value: QueryData<Data, TError>) => void) =>
+    this.state.subscribe(callback);
+
+  public run = async (runOptions: TOptions) => {
+    this.lastOptions = runOptions;
+    this.setLoading();
+
+    try {
+      const result = await this.asyncFn(runOptions);
+
+      this.setSuccess(result);
+      this.onSuccess?.(result);
+    } catch (err) {
+      this.setError(err as TError);
+      this.onError?.(err as TError);
+    }
+  };
+
+  public reset = () => {
+    this.state.set(createInitial<Data, TError>());
+    this.lastOptions = undefined;
+  };
+
+  public refetch = () => {
+    return this.run(this.lastOptions as TOptions);
+  };
+
+  private setLoading = () => {
+    this.state.set({
+      ...this.state.value,
       isLoading: true,
       isSuccess: false,
       isError: false,
       error: null,
     });
-  const setSuccess = (data: Data) =>
-    state.set({ ...state.get(), isLoading: false, isSuccess: true, data });
-  const setError = (error: TError) =>
-    state.set({
-      ...state.get(),
+  };
+
+  private setSuccess = (data: Data) => {
+    this.state.set({
+      ...this.state.value,
+      isLoading: false,
+      isSuccess: true,
+      data,
+    });
+  };
+
+  private setError = (error: TError) => {
+    this.state.set({
+      ...this.state.value,
       data: undefined,
       isLoading: false,
       isError: true,
       error,
     });
-
-  const run = async (runOptions: TOptions) => {
-    lastOptions = runOptions;
-    setLoading();
-
-    try {
-      const result = await asyncFn(runOptions);
-
-      setSuccess(result);
-      onSuccess?.(result);
-    } catch (err) {
-      setError(err as TError);
-      onError?.(err as TError);
-    }
   };
-
-  if (isAutorun) {
-    run(undefined as TOptions);
-  }
-
-  const reset = () => {
-    state.set(createInitial());
-    lastOptions = undefined as TOptions;
-  };
-  const refetch = () => run(lastOptions);
-
-  return {
-    type: 'query',
-    get: state.get,
-    set: state.set,
-    run,
-    reset,
-    refetch,
-    subscribe: state.subscribe,
-  };
-};
+}

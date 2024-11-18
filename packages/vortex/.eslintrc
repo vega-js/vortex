@@ -2,7 +2,8 @@
   "root": true,
   "extends": "@self-kit/eslint-config-react-ts",
   "rules": {
-    "@typescript-eslint/naming-convention": "off"
+    "@typescript-eslint/naming-convention": "off",
+    "@typescript-eslint/no-loop-func": "off"
   },
   "ignorePatterns": ["dist"]
 }
