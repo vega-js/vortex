@@ -1,9 +1,9 @@
 import type { ReactiveContext } from '../reactive-context';
 
 export class Effect {
-  private cleanup: (() => void) | undefined;
+  #cleanup: (() => void) | undefined;
 
-  private isActive = true;
+  #isActive = true;
 
   constructor(
     private readonly fn: () => (() => void) | void,
@@ -15,37 +15,37 @@ export class Effect {
   }
 
   private executor = () => {
-    if (!this.isActive) {
+    if (!this.#isActive) {
       return;
     }
 
     try {
-      if (this.cleanup) {
-        this.cleanup();
+      if (this.#cleanup) {
+        this.#cleanup();
       }
 
-      this.cleanup = this.fn() as (() => void) | undefined;
+      this.#cleanup = this.fn() as (() => void) | undefined;
     } finally {
     }
   };
 
   private initializeEffect() {
-    if (!this.isActive) {
+    if (!this.#isActive) {
       return;
     }
 
-    if (this.cleanup) {
-      this.cleanup();
+    if (this.#cleanup) {
+      this.#cleanup();
     }
 
     this.context.track(this.executor);
   }
 
   public stop() {
-    if (this.cleanup) {
-      this.cleanup();
+    if (this.#cleanup) {
+      this.#cleanup();
     }
 
-    this.isActive = false;
+    this.#isActive = false;
   }
 }

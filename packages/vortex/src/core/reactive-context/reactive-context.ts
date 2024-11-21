@@ -1,15 +1,15 @@
 export class ReactiveContext {
-  private currentActive: (() => void) | null = null;
+  #currentActive: (() => void) | null = null;
 
   public track(fn: () => void) {
-    const previousActive = this.currentActive;
+    const previousActive = this.#currentActive;
 
-    this.currentActive = fn;
+    this.#currentActive = fn;
     fn();
-    this.currentActive = previousActive;
+    this.#currentActive = previousActive;
   }
 
   public getActive() {
-    return this.currentActive;
+    return this.#currentActive;
   }
 }

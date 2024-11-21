@@ -5,19 +5,16 @@ import type { ReactiveContext } from '../reactive-context';
 export class ComputedValue<T> implements Computed<T> {
   public type = 'computed' as const;
 
+  #result: ReactiveValue<T>;
+
   private cachedValue: T;
-
-  private result: ReactiveValue<T>;
-
-  private context: ReactiveContext;
 
   constructor(
     private readonly fn: () => T,
-    context: ReactiveContext,
+    private readonly context: ReactiveContext,
   ) {
-    this.context = context;
     this.cachedValue = this.computeValue();
-    this.result = new ReactiveValue<T>(this.cachedValue, context);
+    this.#result = new ReactiveValue<T>(this.cachedValue, context);
     this.context.track(this.update.bind(this));
   }
 
@@ -33,15 +30,15 @@ export class ComputedValue<T> implements Computed<T> {
 
     if (!Object.is(this.cachedValue, newValue)) {
       this.cachedValue = newValue;
-      this.result.set(newValue);
+      this.#result.set(newValue);
     }
   }
 
   public get value(): T {
-    return this.result.value;
+    return this.#result.value;
   }
 
   public subscribe(callback: (value: T) => void) {
-    return this.result.subscribe(callback);
+    return this.#result.subscribe(callback);
   }
 }

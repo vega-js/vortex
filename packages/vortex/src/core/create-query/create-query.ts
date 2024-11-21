@@ -13,28 +13,29 @@ const createInitial = <Data, TError>() => ({
 export class QueryHandler<Data, TError, TOptions>
   implements Query<Data, TError, TOptions>
 {
-  private state: ReactiveValue<QueryData<Data, TError>>;
-
-  private readonly asyncFn: (options: TOptions) => Promise<Data>;
-
-  private lastOptions: TOptions | undefined;
-
-  private readonly onError?: (error: TError) => void;
-
-  private readonly onSuccess?: (data: Data) => void;
-
   public type = 'query' as const;
 
+  #lastOptions: TOptions | undefined;
+
+  readonly #onError?: (error: TError) => void;
+
+  readonly #onSuccess?: (data: Data) => void;
+
+  readonly #state: ReactiveValue<QueryData<Data, TError>>;
+
   constructor(
-    asyncFn: (options: TOptions) => Promise<Data>,
-    context: ReactiveContext,
-    options?: QueryOptions<Data, TError>,
+    private readonly asyncFn: (options: TOptions) => Promise<Data>,
+    private readonly context: ReactiveContext,
+    private readonly options?: QueryOptions<Data, TError>,
   ) {
-    this.asyncFn = asyncFn;
-    this.state = new ReactiveValue(createInitial<Data, TError>(), context);
-    this.lastOptions = undefined;
-    this.onError = options?.onError;
-    this.onSuccess = options?.onSuccess;
+    this.#state = new ReactiveValue(
+      createInitial<Data, TError>(),
+      this.context,
+    );
+
+    this.#lastOptions = undefined;
+    this.#onError = this.options?.onError;
+    this.#onSuccess = this.options?.onSuccess;
 
     if (options?.isAutorun) {
       this.run(undefined as TOptions);
@@ -42,45 +43,45 @@ export class QueryHandler<Data, TError, TOptions>
   }
 
   public get value() {
-    return this.state.value;
+    return this.#state.value;
   }
 
   public set = (
     value:
       | QueryData<Data, TError>
       | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>),
-  ) => this.state.set(value);
+  ) => this.#state.set(value);
 
   public subscribe = (callback: (value: QueryData<Data, TError>) => void) =>
-    this.state.subscribe(callback);
+    this.#state.subscribe(callback);
 
   public run = async (runOptions: TOptions) => {
-    this.lastOptions = runOptions;
+    this.#lastOptions = runOptions;
     this.setLoading();
 
     try {
       const result = await this.asyncFn(runOptions);
 
       this.setSuccess(result);
-      this.onSuccess?.(result);
+      this.#onSuccess?.(result);
     } catch (err) {
       this.setError(err as TError);
-      this.onError?.(err as TError);
+      this.#onError?.(err as TError);
     }
   };
 
   public reset = () => {
-    this.state.set(createInitial<Data, TError>());
-    this.lastOptions = undefined;
+    this.#state.set(createInitial<Data, TError>());
+    this.#lastOptions = undefined;
   };
 
   public refetch = () => {
-    return this.run(this.lastOptions as TOptions);
+    return this.run(this.#lastOptions as TOptions);
   };
 
   private setLoading = () => {
-    this.state.set({
-      ...this.state.value,
+    this.#state.set({
+      ...this.#state.value,
       isLoading: true,
       isSuccess: false,
       isError: false,
@@ -89,8 +90,8 @@ export class QueryHandler<Data, TError, TOptions>
   };
 
   private setSuccess = (data: Data) => {
-    this.state.set({
-      ...this.state.value,
+    this.#state.set({
+      ...this.#state.value,
       isLoading: false,
       isSuccess: true,
       data,
@@ -98,8 +99,8 @@ export class QueryHandler<Data, TError, TOptions>
   };
 
   private setError = (error: TError) => {
-    this.state.set({
-      ...this.state.value,
+    this.#state.set({
+      ...this.#state.value,
       data: undefined,
       isLoading: false,
       isError: true,
