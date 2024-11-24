@@ -14,7 +14,7 @@ export default defineConfig({
     input: [
       'src/**/*.ts',
       'src/**/*.tsx',
-      '!src/types.ts',
+      '!src/styles.ts',
       '!src/**/*.spec.ts',
       '!src/**/*.spec.tsx',
       '!src/**/*.test.ts',

@@ -35,7 +35,7 @@ export const persistPlugin =
         (acc, fieldKey) => {
           if (s[fieldKey] !== undefined && s[fieldKey] !== null) {
             if (isQuery(store.state[fieldKey])) {
-              acc[fieldKey] = store.state[fieldKey].get()
+              acc[fieldKey] = store.state[fieldKey].value
                 .data as UnwrappedState<T>[typeof fieldKey];
             } else {
               acc[fieldKey] = s[fieldKey];

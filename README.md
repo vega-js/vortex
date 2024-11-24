@@ -27,8 +27,7 @@
 
 ---
 
-- [Explore the full documentation](https://github.com/vega-js/vortex/blob/main/packages/vortex/docs/main.md)
-- [Dive into more examples and see Vortex in action](https://github.com/vega-js/vortex/blob/main/packages/vortex/docs/examples/main.md)
+- [Explore the full documentation](https://docs-vortex.netlify.app)
 
 ---
 
@@ -53,10 +52,10 @@ import { defineStore } from '@vegajs/vortex';
 
 export const counterStore = defineStore(({ reactive, computed, effect }) => {
   const count = reactive(0);
-  const doubleCount = computed(() => count.get() * 2);
+  const doubleCount = computed(() => count.value * 2);
 
   effect(() => {
-    console.log(`Count is: ${count.get()}`);
+    console.log(`Count is: ${count.value}`);
   });
 
   const increment = () => count.set(prev => prev + 1);
@@ -104,7 +103,7 @@ import { defineStore, useStore } from '@vegajs/vortex';
 
 const counterStore = defineStore(({ reactive, computed }) => {
   const count = reactive(0);
-  const doubleCount = computed(() => count.get() * 2);
+  const doubleCount = computed(() => count.value * 2);
   const increment = () => count.set(prev => prev + 1);
 
   return { count, doubleCount, increment };

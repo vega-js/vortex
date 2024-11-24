@@ -1,18 +1,51 @@
-import type { BatchManager } from '../batch-manager';
 import type { ReactiveContext } from '../reactive-context';
 
-export const createEffect = (
-  fn: () => void,
-  context: ReactiveContext,
-  batchManager: BatchManager,
-) => {
-  const update = () => {
+export class Effect {
+  #cleanup: (() => void) | undefined;
+
+  #isActive = true;
+
+  constructor(
+    private readonly fn: () => (() => void) | void,
+    private readonly context: ReactiveContext,
+  ) {
     Promise.resolve().then(() => {
-      batchManager.addTask(() => {
-        context.track(fn);
-      });
+      this.initializeEffect();
     });
+  }
+
+  private executor = () => {
+    if (!this.#isActive) {
+      return;
+    }
+
+    try {
+      if (this.#cleanup) {
+        this.#cleanup();
+      }
+
+      this.#cleanup = this.fn() as (() => void) | undefined;
+    } finally {
+    }
   };
 
-  update();
-};
+  private initializeEffect() {
+    if (!this.#isActive) {
+      return;
+    }
+
+    if (this.#cleanup) {
+      this.#cleanup();
+    }
+
+    this.context.track(this.executor);
+  }
+
+  public stop() {
+    if (this.#cleanup) {
+      this.#cleanup();
+    }
+
+    this.#isActive = false;
+  }
+}

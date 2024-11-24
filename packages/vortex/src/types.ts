@@ -3,7 +3,7 @@ import type { DIContainer } from './core';
 type UnknownState = Record<string, unknown>;
 
 export type Reactive<Value> = {
-  get: () => Value;
+  get value(): Value;
   set: (value: Value | ((prevValue: Value) => Value)) => void;
   subscribe: (callback: (value: Value) => void) => () => void;
   reset: () => void;
@@ -11,7 +11,7 @@ export type Reactive<Value> = {
 };
 
 export type Computed<Value> = {
-  get: () => Value;
+  get value(): Value;
   subscribe: (callback: (value: Value) => void) => () => void;
   type: 'computed';
 };
@@ -31,7 +31,7 @@ export type QueryOptions<TData, TError> = {
 };
 
 export type Query<Data, TError, TOptions> = {
-  get: () => QueryData<Data, TError>;
+  get value(): QueryData<Data, TError>;
   set: (
     value:
       | QueryData<Data, TError>
@@ -71,17 +71,13 @@ export type DefineStore<T extends UnknownState> = {
 export type DefineApi<Deps = Record<string, unknown> | undefined> = {
   reactive: <Value>(initialValue: Value) => Reactive<Value>;
   computed: <T>(fn: () => T) => Computed<T>;
-  effect: (fn: () => void) => void;
+  effect: (fn: () => void) => () => void;
   DI: Deps extends undefined ? never : DIContainer<Deps>;
 
   query: <Data, TError, TOptions = void>(
     cb: (options: TOptions) => Promise<Data>,
     options?: QueryOptions<Data, TError>,
   ) => Query<Data, TError, TOptions>;
-};
-
-export type DefineLocalApi<DIDeps> = Omit<DefineApi, 'DI'> & {
-  DI?: DIContainer<DIDeps>;
 };
 
 export type Plugin<T extends UnknownState> = (store: DefineStore<T>) => void;

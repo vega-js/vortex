@@ -1,6 +1,5 @@
 import type {
   DefineApi,
-  DefineLocalApi,
   DefineStore,
   QueryOptions,
   Reactive,
@@ -8,155 +7,199 @@ import type {
   UnwrappedState,
   WatchCallback,
 } from '../../types';
-import { isReactiveUnit, shallowEqual, toObjectKeys } from '../../utils';
+import { isReactiveUnit, toObjectKeys } from '../../utils';
 import { BatchManager } from '../batch-manager';
-import { createComputed } from '../create-computed';
-import { createEffect } from '../create-effect';
-import { createQuery } from '../create-query';
-import { createReactive } from '../create-reactive';
+import { ComputedValue } from '../create-computed';
+import { Effect } from '../create-effect';
+import { QueryHandler } from '../create-query';
+import { ReactiveValue } from '../create-reactive';
 import { ReactiveContext } from '../reactive-context';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
-const defineStore = <
+class Store<
+  T extends Record<string, unknown>,
+  DIDeps extends Record<string, unknown> | undefined = undefined,
+> {
+  private batchManager = new BatchManager();
+
+  private localContext = new ReactiveContext();
+
+  private listeners = new Map<number, WatchCallback<UnwrappedState<T>>>();
+
+  private listenerCounter = 0;
+
+  private readonly state: T;
+
+  private readonly reactiveUnits: (keyof T)[];
+
+  private prevState: UnwrappedState<T>;
+
+  private readonly stateKeys: (keyof T)[] = [];
+
+  private readonly name: string;
+
+  constructor(
+    setup: (args: DefineApi<DIDeps>) => T,
+    options: StoreOptions<T, DIDeps> = {},
+  ) {
+    const { plugins = [], DI, name = `unknown_${Date.now()}` } = options;
+
+    this.name = name;
+
+    this.state = setup({
+      reactive: this.createReactive.bind(this),
+      computed: this.createComputed.bind(this),
+      effect: this.createEffect.bind(this),
+      query: this.createQuery.bind(this),
+      DI,
+    } as unknown as DefineApi<DIDeps>);
+
+    const stateKeys = toObjectKeys(this.state);
+
+    this.stateKeys = stateKeys;
+
+    this.reactiveUnits = stateKeys.filter((key) =>
+      isReactiveUnit(this.state[key]),
+    );
+
+    this.prevState = this.getSnapshot();
+    this.cleanupAll = this.observeReactivity();
+    plugins.forEach((plugin) => plugin(this.getStore()));
+
+    Promise.resolve().then(() => {
+      initDevtoolsStore(this.name, this.prevState);
+    });
+  }
+
+  private createReactive<Value>(initialValue: Value): Reactive<Value> {
+    return new ReactiveValue(initialValue, this.localContext);
+  }
+
+  private createComputed<Value>(fn: () => Value) {
+    return new ComputedValue(fn, this.localContext);
+  }
+
+  private createEffect(fn: () => void) {
+    const effect = new Effect(fn, this.localContext);
+
+    return effect.stop.bind(effect);
+  }
+
+  private createQuery<Data, TError, TOptions>(
+    cb: (options: TOptions) => Promise<Data>,
+    queryOptions?: QueryOptions<Data, TError>,
+  ) {
+    return new QueryHandler<Data, TError, TOptions>(
+      cb,
+      this.localContext,
+      queryOptions,
+    );
+  }
+
+  private getSnapshot(): UnwrappedState<T> {
+    const newSnapshot = {} as UnwrappedState<T>;
+
+    for (let i = 0; i < this.stateKeys.length; i++) {
+      const key = this.stateKeys[i];
+      const reactiveUnit = this.state[key];
+
+      newSnapshot[key] = isReactiveUnit(reactiveUnit)
+        ? (reactiveUnit.value as UnwrappedState<T>[typeof key])
+        : (reactiveUnit as UnwrappedState<T>[typeof key]);
+    }
+
+    return newSnapshot;
+  }
+
+  private triggerWatchers(
+    newState: UnwrappedState<T>,
+    oldState: UnwrappedState<T>,
+  ) {
+    Promise.resolve().then(() => observeStore(newState, oldState, this.name));
+    this.listeners.forEach((listener) => listener(newState, oldState));
+  }
+
+  isBatchScheduled = false;
+
+  private observeReactivity(): () => void {
+    const unsubscribeFunctions: (() => void)[] = [];
+
+    let batchedState: UnwrappedState<T> | null = null;
+
+    const triggerBatchUpdate = () => {
+      if (!this.isBatchScheduled) {
+        this.isBatchScheduled = true;
+
+        this.batchManager.addTask(() => {
+          if (batchedState) {
+            this.triggerWatchers(batchedState, this.prevState);
+            this.prevState = batchedState;
+            batchedState = null;
+          }
+
+          this.isBatchScheduled = false;
+        });
+      }
+    };
+
+    for (let i = 0; i < this.reactiveUnits.length; i++) {
+      const key = this.reactiveUnits[i];
+      const reactiveUnit = this.state[key] as Reactive<unknown>;
+
+      const unsubscribe = reactiveUnit.subscribe((value) => {
+        if (!batchedState) {
+          batchedState = { ...this.prevState };
+        }
+
+        batchedState[key] = value as UnwrappedState<T>[typeof key];
+        triggerBatchUpdate();
+      });
+
+      unsubscribeFunctions.push(unsubscribe);
+    }
+
+    return () => {
+      for (let i = 0; i < unsubscribeFunctions.length; i++) {
+        unsubscribeFunctions[i]();
+      }
+    };
+  }
+
+  public action(cb: (state: T) => unknown): void {
+    cb(this.state);
+  }
+
+  public subscribe(callback: WatchCallback<UnwrappedState<T>>): () => void {
+    const id = this.listenerCounter++;
+
+    this.listeners.set(id, callback);
+
+    return () => {
+      this.listeners.delete(id);
+    };
+  }
+
+  public cleanupAll(): void {}
+
+  public getStore(): DefineStore<T> {
+    return {
+      state: this.state,
+      getSnapshot: this.getSnapshot.bind(this),
+      action: this.action.bind(this),
+      subscribe: this.subscribe.bind(this),
+      cleanupAll: this.cleanupAll.bind(this),
+    };
+  }
+}
+
+export const defineStore = <
   T extends Record<string, unknown>,
   DIDeps extends Record<string, unknown> | undefined = undefined,
 >(
   setup: (args: DefineApi<DIDeps>) => T,
-  options?: StoreOptions<T, DIDeps>,
+  options: StoreOptions<T, DIDeps> = {},
 ): DefineStore<T> => {
-  const batchManager = new BatchManager();
+  const storeInstance = new Store(setup, options);
 
-  const listeners = new Set<WatchCallback<UnwrappedState<T>>>();
-
-  const {
-    plugins = [],
-    DI,
-    name = `unknown_${new Date().toISOString()}`,
-  } = options || {};
-
-  const localContext = new ReactiveContext();
-
-  let memoizedSnapshot: UnwrappedState<T> | null = null;
-
-  const reactive = <Value>(initialValue: Value) =>
-    createReactive(initialValue, localContext);
-
-  const computed = <Value>(fn: () => Value) => createComputed(fn, localContext);
-
-  const effect = (fn: () => void) =>
-    createEffect(fn, localContext, batchManager);
-
-  const query = <Data, TError, TOptions>(
-    cb: (options: TOptions) => Promise<Data>,
-    queryOptions?: QueryOptions<Data, TError>,
-  ) => createQuery<Data, TError, TOptions>(cb, localContext, queryOptions);
-
-  const createApi = () => {
-    const creators: DefineLocalApi<DIDeps> = {
-      reactive,
-      computed,
-      effect,
-      query,
-    };
-
-    if (DI) {
-      creators.DI = DI;
-    }
-
-    return creators as DefineApi<DIDeps>;
-  };
-
-  const state = setup(createApi());
-
-  const action = (cb: (state: T) => unknown) => {
-    cb(state);
-  };
-
-  const getSnapshot = () => {
-    const newSnapshot = toObjectKeys(state).reduce((acc, key) => {
-      const reactiveUnit = state[key];
-
-      acc[key] = isReactiveUnit(reactiveUnit)
-        ? (reactiveUnit.get() as UnwrappedState<T>[typeof key])
-        : (reactiveUnit as UnwrappedState<T>[typeof key]);
-
-      return acc;
-    }, {} as UnwrappedState<T>);
-
-    if (memoizedSnapshot && shallowEqual(newSnapshot, memoizedSnapshot)) {
-      return memoizedSnapshot;
-    }
-
-    memoizedSnapshot = newSnapshot;
-
-    return newSnapshot;
-  };
-
-  let prevState = getSnapshot();
-
-  const triggerWatchers = (
-    newState: UnwrappedState<T>,
-    oldState: UnwrappedState<T>,
-  ) => {
-    observeStore(newState, oldState, name);
-    listeners.forEach((listener) => listener(newState, oldState));
-  };
-
-  const observeReactivity = () => {
-    const reactiveUnits = Object.keys(state).filter((key) =>
-      isReactiveUnit(state[key]),
-    );
-
-    const unsubscribeFunctions = new Set<() => void>();
-
-    reactiveUnits.forEach((key) => {
-      const reactiveUnit = state[key] as Reactive<unknown>;
-
-      const unsubscribe = reactiveUnit.subscribe(() => {
-        batchManager.addTask(() => {
-          const newState = getSnapshot();
-
-          if (!shallowEqual(newState[key], prevState[key])) {
-            triggerWatchers(newState, prevState);
-            prevState = newState;
-          }
-        });
-      });
-
-      unsubscribeFunctions.add(unsubscribe);
-    });
-
-    return () => {
-      unsubscribeFunctions.forEach((unsubscribe) => unsubscribe());
-      unsubscribeFunctions.clear();
-    };
-  };
-
-  const cleanupAll = observeReactivity();
-
-  const subscribe = (callback: WatchCallback<UnwrappedState<T>>) => {
-    listeners.add(callback);
-
-    return () => {
-      listeners.delete(callback);
-    };
-  };
-
-  Promise.resolve().then(() => {
-    initDevtoolsStore(name, prevState);
-  });
-
-  const store: DefineStore<T> = {
-    state,
-    getSnapshot,
-    action,
-    subscribe,
-    cleanupAll,
-  };
-
-  plugins.forEach((plugin) => plugin(store));
-
-  return store;
+  return storeInstance.getStore();
 };
-
-export { defineStore };

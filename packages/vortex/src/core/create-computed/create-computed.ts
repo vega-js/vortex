@@ -1,29 +1,44 @@
 import type { Computed } from '../../types';
-import { shallowEqual } from '../../utils';
-import { createReactive } from '../create-reactive';
+import { ReactiveValue } from '../create-reactive';
 import type { ReactiveContext } from '../reactive-context';
 
-export const createComputed = <T>(
-  fn: () => T,
-  context: ReactiveContext,
-): Computed<T> => {
-  let cachedValue = fn();
-  const result = createReactive(cachedValue, context);
+export class ComputedValue<T> implements Computed<T> {
+  public type = 'computed' as const;
 
-  const update = () => {
-    const newValue = fn();
+  #result: ReactiveValue<T>;
 
-    if (!shallowEqual(cachedValue, newValue)) {
-      cachedValue = newValue;
-      result.set(newValue);
+  private cachedValue: T;
+
+  constructor(
+    private readonly fn: () => T,
+    private readonly context: ReactiveContext,
+  ) {
+    this.cachedValue = this.computeValue();
+    this.#result = new ReactiveValue<T>(this.cachedValue, context);
+    this.context.track(this.update.bind(this));
+  }
+
+  private computeValue(): T {
+    try {
+      return this.fn();
+    } finally {
     }
-  };
+  }
 
-  context.track(update);
+  private update(): void {
+    const newValue = this.computeValue();
 
-  return {
-    type: 'computed',
-    get: result.get,
-    subscribe: result.subscribe,
-  };
-};
+    if (!Object.is(this.cachedValue, newValue)) {
+      this.cachedValue = newValue;
+      this.#result.set(newValue);
+    }
+  }
+
+  public get value(): T {
+    return this.#result.value;
+  }
+
+  public subscribe(callback: (value: T) => void) {
+    return this.#result.subscribe(callback);
+  }
+}

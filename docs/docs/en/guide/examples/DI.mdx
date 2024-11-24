@@ -18,7 +18,7 @@ export const DIStore = defineStore(
     const count = reactive(0);
 
     const alert = DI.get('alert');
-    const showAlert = () => alert(`count: ${count.get()}`);
+    const showAlert = () => alert(`count: ${count.value}`);
 
     return { showAlert };
   },

@@ -1,26 +1,31 @@
 export class BatchManager {
-  private isBatching = false;
+  #isBatching = false;
 
-  private batchedTasks = new Set<() => void>();
+  #batchedTasks: (() => void)[] = [];
 
   public addTask(task: () => void) {
-    this.batchedTasks.add(task);
+    this.#batchedTasks.push(task);
     this.batchUpdates();
   }
 
   private batchUpdates() {
-    if (!this.isBatching) {
-      this.isBatching = true;
+    if (!this.#isBatching) {
+      this.#isBatching = true;
 
       Promise.resolve().then(() => {
         this.triggerBatchedTasks();
-        this.isBatching = false;
+        this.#isBatching = false;
       });
     }
   }
 
   private triggerBatchedTasks() {
-    this.batchedTasks.forEach((task) => task());
-    this.batchedTasks.clear();
+    const tasksToRun = this.#batchedTasks.slice();
+
+    this.#batchedTasks.length = 0;
+
+    tasksToRun.forEach((task) => {
+      task();
+    });
   }
 }

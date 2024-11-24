@@ -10,7 +10,7 @@ const effectStore = defineStore(({ reactive, effect }) => {
   const logEffect = reactive<string | undefined>(undefined);
 
   effect(() => {
-    logEffect.set(`effect was called with count: ${count.get()}`);
+    logEffect.set(`effect was called with count: ${count.value}`);
   });
 
   const increment = () => count.set((prev) => prev + 1);

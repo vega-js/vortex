@@ -1,7 +1,7 @@
 {
 	"name": "@vegajs/vortex",
 	"version": "0.0.0",
-  "description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
+	"description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
 	"keywords": [
 		"state management",
 		"state",
@@ -15,37 +15,48 @@
 		"state",
 		"flux"
 	],
-	"homepage": "https://github.com/vega-js/vortex/packages/vortex",
+	"homepage": "https://docs-vortex.netlify.app",
 	"bugs": {
 		"url": "https://github.com/vega-js/vortex/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/vega-js/vortex"
+		"url": "https://github.com/vega-js/vortex",
+		"directory": "packages/vortex"
 	},
 	"sideEffects": false,
 	"license": "MIT",
 	"author": "Andrey Zlobin",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+	"main": "./dist/index.js",
+	"module": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": "./dist/index.js",
+			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts"
+		},
+		"./react": {
+			"import": "./dist/react/index.js",
+			"require": "./dist/react/index.js",
+			"types": "./dist/react/index.d.ts"
+		},
+		"./vanilla": {
+			"import": "./dist/core/index.js",
+			"require": "./dist/core/index.js",
+			"types": "./dist/core/index.d.ts"
+		},
+    "./reactivity": {
+      "import": "./dist/reactivity.js",
+      "require": "./dist/reactivity.js",
+      "types": "./dist/reactivity.d.ts"
     },
-    "./vanilla": {
-      "import": "./dist/core/index.js",
-      "require": "./dist/core/index.js",
-      "types": "./dist/core/index.d.ts"
-    },
-    "./plugins": {
-      "import": "./dist/plugins/index.js",
-      "require": "./dist/plugins/index.js",
-      "types": "./dist/plugins/index.d.ts"
-    }
-  },
+		"./plugins": {
+			"import": "./dist/plugins/index.js",
+			"require": "./dist/plugins/index.js",
+			"types": "./dist/plugins/index.d.ts"
+		}
+	},
 	"files": ["dist", "README.md"],
 	"scripts": {
 		"build": "modern build",
