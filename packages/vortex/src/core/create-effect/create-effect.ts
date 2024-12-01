@@ -20,7 +20,7 @@ export class Effect {
     }
 
     try {
-      if (this.#cleanup) {
+      if (!this.#isActive && this.#cleanup) {
         this.#cleanup();
       }
 
