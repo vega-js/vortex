@@ -6,20 +6,22 @@ import { ReactiveContext } from './core/reactive-context';
 import type { Reactive } from './types';
 
 const context = new ReactiveContext();
-const batch = new BatchManager();
+const batchM = new BatchManager();
 
 const reactive = <Value>(initialValue: Value): Reactive<Value> => {
-  return new ReactiveValue(initialValue, context, batch);
+  return new ReactiveValue(initialValue, context, batchM);
 };
 
 const computed = <Value>(fn: () => Value) => {
-  return new ComputedValue(fn, context, batch);
+  return new ComputedValue(fn, context, batchM);
 };
 
 const effect = (fn: () => void) => {
-  const instanceEffect = new Effect(fn, context, batch);
+  const instanceEffect = new Effect(fn, context, batchM);
 
   return instanceEffect.stop.bind(effect);
 };
 
-export { reactive, computed, effect };
+const batch = batchM.batch.bind(batchM);
+
+export { reactive, computed, effect, batch };

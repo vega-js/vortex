@@ -97,6 +97,7 @@ class Store<
     return new QueryHandler<Data, TError, TOptions>(
       cb,
       this.localContext,
+      this.batchManager,
       queryOptions,
     );
   }

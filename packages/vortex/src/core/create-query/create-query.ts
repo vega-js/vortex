@@ -1,4 +1,5 @@
 import type { Query, QueryData, QueryOptions } from '../../types';
+import type { BatchManager } from '../batch-manager';
 import { ReactiveValue } from '../create-reactive';
 import type { ReactiveContext } from '../reactive-context';
 
@@ -25,12 +26,14 @@ export class QueryHandler<Data, TError, TOptions>
 
   constructor(
     private readonly asyncFn: (options: TOptions) => Promise<Data>,
-    private readonly context: ReactiveContext,
+    readonly context: ReactiveContext,
+    readonly batch: BatchManager,
     private readonly options?: QueryOptions<Data, TError>,
   ) {
     this.#state = new ReactiveValue(
       createInitial<Data, TError>(),
-      this.context,
+      context,
+      batch,
     );
 
     this.#lastOptions = undefined;
