@@ -72,6 +72,7 @@ export type DefineApi<Deps = Record<string, unknown> | undefined> = {
   reactive: <Value>(initialValue: Value) => Reactive<Value>;
   computed: <T>(fn: () => T) => Computed<T>;
   effect: (fn: () => void) => () => void;
+  batch: (task: () => void) => void;
   DI: Deps extends undefined ? never : DIContainer<Deps>;
 
   query: <Data, TError, TOptions = void>(

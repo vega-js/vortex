@@ -20,9 +20,9 @@ class Store<
   T extends Record<string, unknown>,
   DIDeps extends Record<string, unknown> | undefined = undefined,
 > {
-  private batchManager = new BatchManager();
-
   private localContext = new ReactiveContext();
+
+  private batchManager = new BatchManager();
 
   private listeners = new Map<number, WatchCallback<UnwrappedState<T>>>();
 
@@ -51,6 +51,7 @@ class Store<
       computed: this.createComputed.bind(this),
       effect: this.createEffect.bind(this),
       query: this.createQuery.bind(this),
+      batch: this.batchManager.batch.bind(this.batchManager),
       DI,
     } as unknown as DefineApi<DIDeps>);
 
@@ -72,15 +73,19 @@ class Store<
   }
 
   private createReactive<Value>(initialValue: Value): Reactive<Value> {
-    return new ReactiveValue(initialValue, this.localContext);
+    return new ReactiveValue(
+      initialValue,
+      this.localContext,
+      this.batchManager,
+    );
   }
 
   private createComputed<Value>(fn: () => Value) {
-    return new ComputedValue(fn, this.localContext);
+    return new ComputedValue(fn, this.localContext, this.batchManager);
   }
 
   private createEffect(fn: () => void) {
-    const effect = new Effect(fn, this.localContext);
+    const effect = new Effect(fn, this.localContext, this.batchManager);
 
     return effect.stop.bind(effect);
   }
@@ -115,11 +120,11 @@ class Store<
     newState: UnwrappedState<T>,
     oldState: UnwrappedState<T>,
   ) {
-    Promise.resolve().then(() => observeStore(newState, oldState, this.name));
     this.listeners.forEach((listener) => listener(newState, oldState));
+    Promise.resolve().then(() => observeStore(newState, oldState, this.name));
   }
 
-  isBatchScheduled = false;
+  private isBatchScheduled = false;
 
   private observeReactivity(): () => void {
     const unsubscribeFunctions: (() => void)[] = [];
@@ -130,7 +135,7 @@ class Store<
       if (!this.isBatchScheduled) {
         this.isBatchScheduled = true;
 
-        this.batchManager.addTask(() => {
+        Promise.resolve().then(() => {
           if (batchedState) {
             this.triggerWatchers(batchedState, this.prevState);
             this.prevState = batchedState;

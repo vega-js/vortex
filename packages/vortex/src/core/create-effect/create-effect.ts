@@ -1,3 +1,4 @@
+import type { BatchManager } from '../batch-manager';
 import type { ReactiveContext } from '../reactive-context';
 
 export class Effect {
@@ -8,44 +9,48 @@ export class Effect {
   constructor(
     private readonly fn: () => (() => void) | void,
     private readonly context: ReactiveContext,
+    private readonly batchManager: BatchManager,
   ) {
     Promise.resolve().then(() => {
       this.initializeEffect();
     });
   }
 
-  private executor = () => {
+  public run() {
     if (!this.#isActive) {
       return;
     }
 
-    try {
-      if (!this.#isActive && this.#cleanup) {
-        this.#cleanup();
-      }
+    if (this.#cleanup) {
+      this.#cleanup();
+    }
 
+    try {
       this.#cleanup = this.fn() as (() => void) | undefined;
     } finally {
+    }
+  }
+
+  private executor = () => {
+    if (this.batchManager.batchDepth > 0) {
+      this.batchManager.queueEffect(this);
+    } else {
+      try {
+        this.run();
+      } finally {
+      }
     }
   };
 
   private initializeEffect() {
-    if (!this.#isActive) {
-      return;
-    }
-
-    if (this.#cleanup) {
-      this.#cleanup();
-    }
-
     this.context.track(this.executor);
   }
 
   public stop() {
+    this.#isActive = false;
+
     if (this.#cleanup) {
       this.#cleanup();
     }
-
-    this.#isActive = false;
   }
 }

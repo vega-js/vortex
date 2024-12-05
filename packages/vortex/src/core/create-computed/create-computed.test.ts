@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import { BatchManager } from '../batch-manager';
 import { ReactiveValue } from '../create-reactive';
 import { ReactiveContext } from '../reactive-context';
 import { ComputedValue } from './create-computed';
@@ -6,15 +7,19 @@ import { ComputedValue } from './create-computed';
 describe('createComputed', () => {
   it('should return the initial computed value', () => {
     const context = new ReactiveContext();
-    const computed = new ComputedValue(() => 42, context);
+    const batch = new BatchManager();
+
+    const computed = new ComputedValue(() => 42, context, batch);
 
     expect(computed.value).toBe(42);
   });
 
   it('should update computed value when a dependency changes', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(10, context);
-    const computed = new ComputedValue(() => dep.value * 2, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(10, context, batch);
+    const computed = new ComputedValue(() => dep.value * 2, context, batch);
 
     expect(computed.value).toBe(20);
     dep.set(15);
@@ -23,8 +28,10 @@ describe('createComputed', () => {
 
   it('should not update if the computed value remains the same after dependency changes', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(10, context);
-    const computed = new ComputedValue(() => dep.value * 2, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(10, context, batch);
+    const computed = new ComputedValue(() => dep.value * 2, context, batch);
 
     const subscriber = vi.fn();
 
@@ -35,8 +42,10 @@ describe('createComputed', () => {
 
   it('should notify subscribers when computed value changes', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(10, context);
-    const computed = new ComputedValue(() => dep.value * 2, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(10, context, batch);
+    const computed = new ComputedValue(() => dep.value * 2, context, batch);
 
     const subscriber = vi.fn();
 
@@ -48,8 +57,10 @@ describe('createComputed', () => {
 
   it('should not notify subscribers if computed value does not change', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(10, context);
-    const computed = new ComputedValue(() => dep.value * 2, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(10, context, batch);
+    const computed = new ComputedValue(() => dep.value * 2, context, batch);
 
     const subscriber = vi.fn();
 
@@ -60,9 +71,15 @@ describe('createComputed', () => {
 
   it('should update correctly with multiple dependencies', () => {
     const context = new ReactiveContext();
-    const dep1 = new ReactiveValue(10, context);
-    const dep2 = new ReactiveValue(5, context);
-    const computed = new ComputedValue(() => dep1.value + dep2.value, context);
+    const batch = new BatchManager();
+
+    const dep1 = new ReactiveValue(10, context, batch);
+    const dep2 = new ReactiveValue(5, context, batch);
+    const computed = new ComputedValue(
+      () => dep1.value + dep2.value,
+      context,
+      batch,
+    );
 
     expect(computed.value).toBe(15);
     dep1.set(20);
@@ -73,8 +90,10 @@ describe('createComputed', () => {
 
   it('should correctly handle removal of subscriptions', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(10, context);
-    const computed = new ComputedValue(() => dep.value * 2, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(10, context, batch);
+    const computed = new ComputedValue(() => dep.value * 2, context, batch);
 
     const subscriber = vi.fn();
     const unsubscribe = computed.subscribe(subscriber);
@@ -88,9 +107,11 @@ describe('createComputed', () => {
 
   it('should not react to unused dependencies', () => {
     const context = new ReactiveContext();
-    const dep1 = new ReactiveValue(10, context);
-    const dep2 = new ReactiveValue(5, context);
-    const computed = new ComputedValue(() => dep1.value * 2, context);
+    const batch = new BatchManager();
+
+    const dep1 = new ReactiveValue(10, context, batch);
+    const dep2 = new ReactiveValue(5, context, batch);
+    const computed = new ComputedValue(() => dep1.value * 2, context, batch);
 
     const subscriber = vi.fn();
 
@@ -101,9 +122,15 @@ describe('createComputed', () => {
 
   it('should handle delayed updates in chained dependencies', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(1, context);
-    const computed1 = new ComputedValue(() => dep.value + 1, context);
-    const computed2 = new ComputedValue(() => computed1.value + 2, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(1, context, batch);
+    const computed1 = new ComputedValue(() => dep.value + 1, context, batch);
+    const computed2 = new ComputedValue(
+      () => computed1.value + 2,
+      context,
+      batch,
+    );
 
     const subscriber = vi.fn();
 
@@ -115,8 +142,10 @@ describe('createComputed', () => {
 
   it('should work correctly without an active context', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(10, context);
-    const computed = new ComputedValue(() => dep.value * 2, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(10, context, batch);
+    const computed = new ComputedValue(() => dep.value * 2, context, batch);
 
     expect(computed.value).toBe(20);
     dep.set(15);
@@ -125,9 +154,15 @@ describe('createComputed', () => {
 
   it('should handle circular dependencies gracefully', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue(2, context);
-    const computed1 = new ComputedValue(() => dep.value * 2, context);
-    const computed2 = new ComputedValue(() => computed1.value + 1, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue(2, context, batch);
+    const computed1 = new ComputedValue(() => dep.value * 2, context, batch);
+    const computed2 = new ComputedValue(
+      () => computed1.value + 1,
+      context,
+      batch,
+    );
 
     const subscriber = vi.fn();
 
@@ -139,10 +174,13 @@ describe('createComputed', () => {
 
   it('should handle null and undefined values correctly', () => {
     const context = new ReactiveContext();
-    const dep = new ReactiveValue<number | null>(null, context);
+    const batch = new BatchManager();
+
+    const dep = new ReactiveValue<number | null>(null, context, batch);
     const computed = new ComputedValue(
       () => (dep.value !== null ? dep.value! * 2 : 0),
       context,
+      batch,
     );
 
     expect(computed.value).toBe(0);

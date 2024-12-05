@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Effect } from '../create-effect';
 import { BatchManager } from './batch-manager';
 
 describe('BatchManager', () => {
@@ -8,59 +9,130 @@ describe('BatchManager', () => {
     batchManager = new BatchManager();
   });
 
-  it('should add a task and trigger it asynchronously', () => {
-    const mockTask = vi.fn();
+  it('should run a function in a batch', () => {
+    const mockFn = vi.fn();
 
-    batchManager.addTask(mockTask);
-    expect(mockTask).not.toHaveBeenCalled();
-
-    setImmediate(() => {
-      expect(mockTask).toHaveBeenCalledTimes(1);
+    batchManager.batch(() => {
+      mockFn();
     });
+
+    expect(mockFn).toHaveBeenCalledTimes(1);
   });
 
-  it('should batch multiple tasks and trigger them together', () => {
-    const mockTask1 = vi.fn();
-    const mockTask2 = vi.fn();
+  it('should handle nested batches correctly', () => {
+    const mockFn = vi.fn();
 
-    batchManager.addTask(mockTask1);
-    batchManager.addTask(mockTask2);
-    expect(mockTask1).not.toHaveBeenCalled();
-    expect(mockTask2).not.toHaveBeenCalled();
+    batchManager.batch(() => {
+      mockFn();
 
-    setImmediate(() => {
-      expect(mockTask1).toHaveBeenCalledTimes(1);
-      expect(mockTask2).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('should clear tasks after they are triggered', () => {
-    const mockTask = vi.fn();
-
-    batchManager.addTask(mockTask);
-
-    setImmediate(() => {
-      expect(mockTask).toHaveBeenCalledTimes(1);
-      batchManager.addTask(mockTask);
-
-      setImmediate(() => {
-        expect(mockTask).toHaveBeenCalledTimes(2);
+      batchManager.batch(() => {
+        mockFn();
       });
     });
+
+    expect(mockFn).toHaveBeenCalledTimes(2);
   });
 
-  it('should handle tasks added during a batch', () => {
-    const task1 = vi.fn();
-    const task2 = vi.fn();
+  it('should correctly manage batch depth during nested batches', () => {
+    expect(batchManager.batchDepth).toBe(0);
+    batchManager.startBatch();
+    expect(batchManager.batchDepth).toBe(1);
+    batchManager.startBatch();
+    expect(batchManager.batchDepth).toBe(2);
+    batchManager.endBatch();
+    expect(batchManager.batchDepth).toBe(1);
+    batchManager.endBatch();
+    expect(batchManager.batchDepth).toBe(0);
+  });
 
-    batchManager.addTask(() => {
-      task1();
-      task2();
+  it('should correctly manage batch depth with a depth of 100', () => {
+    expect(batchManager.batchDepth).toBe(0);
+
+    for (let i = 0; i < 100; i++) {
+      batchManager.startBatch();
+      expect(batchManager.batchDepth).toBe(i + 1);
+    }
+
+    expect(batchManager.batchDepth).toBe(100);
+
+    for (let i = 100; i > 0; i--) {
+      batchManager.endBatch();
+      expect(batchManager.batchDepth).toBe(i - 1);
+    }
+
+    expect(batchManager.batchDepth).toBe(0);
+  });
+
+  it('should execute queued effects', () => {
+    const effectMock = { run: vi.fn() } as unknown as Effect;
+
+    batchManager.queueEffect(effectMock);
+    batchManager.endBatch();
+    expect(effectMock.run).toHaveBeenCalledTimes(1);
+  });
+
+  it('should handle errors in effects correctly', () => {
+    const effectMock = {
+      run: vi.fn(() => {
+        throw new Error('Effect error');
+      }),
+    } as unknown as Effect;
+
+    batchManager.queueEffect(effectMock);
+    expect(() => batchManager.endBatch()).toThrow('Effect error');
+  });
+
+  it('should process effects added during batch execution', () => {
+    const effectMock1 = { run: vi.fn() } as unknown as Effect;
+    const effectMock2 = { run: vi.fn() } as unknown as Effect;
+
+    batchManager.queueEffect({
+      run: () => {
+        batchManager.queueEffect(effectMock2);
+      },
+    } as Effect);
+
+    batchManager.queueEffect(effectMock1);
+    batchManager.endBatch();
+    expect(effectMock1.run).toHaveBeenCalledTimes(1);
+    expect(effectMock2.run).toHaveBeenCalledTimes(0);
+  });
+
+  it('should not process effects if no effects are queued', () => {
+    expect(() => batchManager.endBatch()).not.toThrow();
+  });
+
+  it('should handle multiple independent batches', () => {
+    const mockFn1 = vi.fn();
+    const mockFn2 = vi.fn();
+
+    batchManager.batch(() => {
+      mockFn1();
     });
 
-    setImmediate(() => {
-      expect(task1).toHaveBeenCalledTimes(1);
-      expect(task2).toHaveBeenCalledTimes(1);
+    batchManager.batch(() => {
+      mockFn2();
     });
+
+    expect(mockFn1).toHaveBeenCalledTimes(1);
+    expect(mockFn2).toHaveBeenCalledTimes(1);
+  });
+
+  it('should correctly decrement batchDepth after nested batches', () => {
+    batchManager.startBatch();
+    batchManager.startBatch();
+    batchManager.endBatch();
+    expect(batchManager.batchDepth).toBe(1);
+    batchManager.endBatch();
+    expect(batchManager.batchDepth).toBe(0);
+  });
+
+  it('should not execute effects if batchDepth > 1', () => {
+    const effectMock = { run: vi.fn() } as unknown as Effect;
+
+    batchManager.startBatch();
+    batchManager.queueEffect(effectMock);
+    batchManager.endBatch();
+    expect(effectMock.run).toHaveBeenCalledTimes(1);
   });
 });

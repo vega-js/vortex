@@ -1,18 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
+import { BatchManager } from '../batch-manager';
 import { ReactiveContext } from '../reactive-context';
 import { ReactiveValue } from './create-reactive';
 
 describe('createReactive', () => {
   it('should return the initial value from get', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     expect(reactive.value).toBe(10);
   });
 
   it('should update the value with set and reflect it in get', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     reactive.set(20);
     expect(reactive.value).toBe(20);
@@ -20,7 +25,9 @@ describe('createReactive', () => {
 
   it('should call subscribers when value is updated', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     const subscriber1 = vi.fn();
     const subscriber2 = vi.fn();
@@ -34,7 +41,9 @@ describe('createReactive', () => {
 
   it('should not call unsubscribed subscribers', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     const subscriber = vi.fn();
     const unsubscribe = reactive.subscribe(subscriber);
@@ -46,7 +55,9 @@ describe('createReactive', () => {
 
   it('should not notify subscribers if the value remains the same', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     const subscriber = vi.fn();
 
@@ -57,7 +68,9 @@ describe('createReactive', () => {
 
   it('should reset the value to the initial value', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     reactive.set(50);
     expect(reactive.value).toBe(50);
@@ -67,7 +80,9 @@ describe('createReactive', () => {
 
   it('should allow setting the value with a function', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     reactive.set((prev) => prev + 5);
     expect(reactive.value).toBe(15);
@@ -75,7 +90,9 @@ describe('createReactive', () => {
 
   it('should track active functions via context', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     const tracker = vi.fn();
 
@@ -90,7 +107,9 @@ describe('createReactive', () => {
 
   it('should not add duplicate subscribers', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     const subscriber = vi.fn();
 
@@ -103,8 +122,10 @@ describe('createReactive', () => {
 
   it('should correctly handle multiple independent reactives', () => {
     const context = new ReactiveContext();
-    const reactive1 = new ReactiveValue(10, context);
-    const reactive2 = new ReactiveValue(20, context);
+    const batch = new BatchManager();
+
+    const reactive1 = new ReactiveValue(10, context, batch);
+    const reactive2 = new ReactiveValue(20, context, batch);
 
     expect(reactive1.value).toBe(10);
     expect(reactive2.value).toBe(20);
@@ -115,7 +136,9 @@ describe('createReactive', () => {
 
   it('should notify only relevant subscribers', () => {
     const context = new ReactiveContext();
-    const reactive = new ReactiveValue(10, context);
+    const batch = new BatchManager();
+
+    const reactive = new ReactiveValue(10, context, batch);
 
     const subscriber1 = vi.fn();
     const subscriber2 = vi.fn();

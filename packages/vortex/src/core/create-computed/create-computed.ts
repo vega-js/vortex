@@ -1,4 +1,5 @@
 import type { Computed } from '../../types';
+import type { BatchManager } from '../batch-manager';
 import { ReactiveValue } from '../create-reactive';
 import type { ReactiveContext } from '../reactive-context';
 
@@ -12,9 +13,16 @@ export class ComputedValue<T> implements Computed<T> {
   constructor(
     private readonly fn: () => T,
     private readonly context: ReactiveContext,
+    private readonly batchManager: BatchManager,
   ) {
     this.cachedValue = this.computeValue();
-    this.#result = new ReactiveValue<T>(this.cachedValue, context);
+
+    this.#result = new ReactiveValue<T>(
+      this.cachedValue,
+      context,
+      this.batchManager,
+    );
+
     this.context.track(this.update.bind(this));
   }
 
@@ -35,6 +43,8 @@ export class ComputedValue<T> implements Computed<T> {
   }
 
   public get value(): T {
+    this.cachedValue = this.computeValue();
+
     return this.#result.value;
   }
 

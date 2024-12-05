@@ -1,4 +1,5 @@
 import type { Reactive } from '../../types';
+import type { BatchManager } from '../batch-manager';
 import type { ReactiveContext } from '../reactive-context';
 
 export class ReactiveValue<Value> implements Reactive<Value> {
@@ -11,6 +12,7 @@ export class ReactiveValue<Value> implements Reactive<Value> {
   constructor(
     private readonly initialValue: Value,
     private readonly context: ReactiveContext,
+    private readonly batchManager: BatchManager,
   ) {
     this.#currentValue = initialValue;
   }
@@ -56,7 +58,9 @@ export class ReactiveValue<Value> implements Reactive<Value> {
     this.notifySubscribers(this.#currentValue);
   }
 
-  private notifySubscribers(value: Value): void {
+  private notifySubscribers(value: Value) {
+    this.batchManager.startBatch();
     this.#callbacks?.forEach((callback) => callback(value));
+    this.batchManager.endBatch();
   }
 }

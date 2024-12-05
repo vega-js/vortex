@@ -5,8 +5,12 @@ export class ReactiveContext {
     const previousActive = this.#currentActive;
 
     this.#currentActive = fn;
-    fn();
-    this.#currentActive = previousActive;
+
+    try {
+      fn();
+    } finally {
+      this.#currentActive = previousActive;
+    }
   }
 
   public getActive() {
