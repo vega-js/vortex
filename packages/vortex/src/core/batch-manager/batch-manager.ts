@@ -50,6 +50,7 @@ export class BatchManager {
     }
 
     this.batchDepth--;
+    this.#batchIteration = 0;
 
     if (hasError) {
       throw error;
