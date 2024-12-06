@@ -1,4 +1,5 @@
 import type { Computed } from '../../types';
+import { isEqual } from '../../utils';
 import type { BatchManager } from '../batch-manager';
 import { ReactiveValue } from '../create-reactive';
 import type { ReactiveContext } from '../reactive-context';
@@ -28,8 +29,13 @@ export class ComputedValue<T> implements Computed<T> {
 
   private update(): void {
     const newValue = this.computeValue();
+    const isComplexType = typeof newValue === 'object' && newValue !== null;
 
-    if (!Object.is(this.#cachedValue, newValue)) {
+    if (
+      isComplexType
+        ? !isEqual(this.#cachedValue, newValue)
+        : !Object.is(newValue, this.#cachedValue)
+    ) {
       this.#cachedValue = newValue;
       this.#result.set(newValue);
     }
