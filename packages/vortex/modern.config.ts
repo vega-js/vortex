@@ -4,7 +4,7 @@ export default defineConfig({
   plugins: [moduleTools()],
   buildConfig: {
     platform: 'browser',
-    target: 'es2018',
+    target: 'es2022',
     minify: 'terser',
     jsx: 'automatic',
     splitting: true,
