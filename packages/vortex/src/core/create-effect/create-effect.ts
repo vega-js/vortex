@@ -20,10 +20,10 @@ export class Effect {
     this.#fn = fn;
     this.#context = context;
     this.#batch = batch;
-
-    Promise.resolve().then(() => {
-      this.initializeEffect();
-    });
+    // TODO
+    // Promise.resolve().then(() => {
+    this.initializeEffect();
+    // });
   }
 
   public run() {
