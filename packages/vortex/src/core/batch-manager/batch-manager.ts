@@ -71,7 +71,6 @@ export class BatchManager {
     }
   }
 
-  // Optional: method to queue an effect (if needed)
   public queueEffect(effect: Effect) {
     this.batchedEffect = effect;
   }

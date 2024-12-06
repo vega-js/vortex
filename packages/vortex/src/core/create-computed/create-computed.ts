@@ -6,29 +6,22 @@ import type { ReactiveContext } from '../reactive-context';
 export class ComputedValue<T> implements Computed<T> {
   public type = 'computed' as const;
 
+  readonly #fn: () => T;
+
   #result: ReactiveValue<T>;
 
-  private cachedValue: T;
+  #cachedValue: T;
 
-  constructor(
-    private readonly fn: () => T,
-    private readonly context: ReactiveContext,
-    private readonly batchManager: BatchManager,
-  ) {
-    this.cachedValue = this.computeValue();
-
-    this.#result = new ReactiveValue<T>(
-      this.cachedValue,
-      context,
-      this.batchManager,
-    );
-
-    this.context.track(this.update.bind(this));
+  constructor(fn: () => T, context: ReactiveContext, batch: BatchManager) {
+    this.#fn = fn;
+    this.#cachedValue = this.computeValue();
+    this.#result = new ReactiveValue<T>(this.#cachedValue, context, batch);
+    context.track(this.update.bind(this));
   }
 
   private computeValue(): T {
     try {
-      return this.fn();
+      return this.#fn();
     } finally {
     }
   }
@@ -36,14 +29,14 @@ export class ComputedValue<T> implements Computed<T> {
   private update(): void {
     const newValue = this.computeValue();
 
-    if (!Object.is(this.cachedValue, newValue)) {
-      this.cachedValue = newValue;
+    if (!Object.is(this.#cachedValue, newValue)) {
+      this.#cachedValue = newValue;
       this.#result.set(newValue);
     }
   }
 
   public get value(): T {
-    this.cachedValue = this.computeValue();
+    this.#cachedValue = this.computeValue();
 
     return this.#result.value;
   }

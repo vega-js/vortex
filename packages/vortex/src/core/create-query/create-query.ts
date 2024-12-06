@@ -16,13 +16,13 @@ export class QueryHandler<Data, TError, TOptions>
 {
   public type = 'query' as const;
 
-  #lastOptions: TOptions | undefined;
-
   readonly #onError?: (error: TError) => void;
 
   readonly #onSuccess?: (data: Data) => void;
 
   readonly #state: ReactiveValue<QueryData<Data, TError>>;
+
+  #lastOptions: TOptions | undefined;
 
   constructor(
     private readonly asyncFn: (options: TOptions) => Promise<Data>,

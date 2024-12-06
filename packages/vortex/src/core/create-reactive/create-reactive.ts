@@ -9,26 +9,41 @@ export class ReactiveValue<Value> implements Reactive<Value> {
 
   #currentValue: Value;
 
+  readonly #initialValue: Value;
+
+  readonly #context: ReactiveContext;
+
+  readonly #batch: BatchManager;
+
   constructor(
-    private readonly initialValue: Value,
-    private readonly context: ReactiveContext,
-    private readonly batchManager: BatchManager,
+    initialValue: Value,
+    context: ReactiveContext,
+    batchManager: BatchManager,
   ) {
+    this.#initialValue = initialValue;
     this.#currentValue = initialValue;
+    this.#context = context;
+    this.#batch = batchManager;
   }
 
-  public get value(): Value {
-    const activeReactive = this.context.getActive();
+  private setContext() {
+    const activeReactive = this.#context.getActive();
 
     if (activeReactive) {
       this.#callbacks ||= new Set();
       this.#callbacks.add(activeReactive);
     }
+  }
+
+  public get value(): Value {
+    this.setContext();
 
     return this.#currentValue;
   }
 
   public set(value: Value | ((prev: Value) => Value)): void {
+    this.setContext();
+
     const newValue =
       typeof value === 'function'
         ? (value as (prev: Value) => Value)(this.#currentValue)
@@ -54,13 +69,13 @@ export class ReactiveValue<Value> implements Reactive<Value> {
   }
 
   public reset(): void {
-    this.#currentValue = this.initialValue;
+    this.#currentValue = this.#initialValue;
     this.notifySubscribers(this.#currentValue);
   }
 
   private notifySubscribers(value: Value) {
-    this.batchManager.startBatch();
+    this.#batch.startBatch();
     this.#callbacks?.forEach((callback) => callback(value));
-    this.batchManager.endBatch();
+    this.#batch.endBatch();
   }
 }
