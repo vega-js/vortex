@@ -1,29 +1,20 @@
 import type {
   DefineApi,
   DefineStore,
-  QueryOptions,
+  // QueryOptions,
   Reactive,
   StoreOptions,
   UnwrappedState,
   WatchCallback,
 } from '../../types';
 import { isReactiveUnit, toObjectKeys } from '../../utils';
-import { BatchManager } from '../batch-manager';
-import { ComputedValue } from '../create-computed';
-import { Effect } from '../create-effect';
-import { QueryHandler } from '../create-query';
-import { ReactiveValue } from '../create-reactive';
-import { ReactiveContext } from '../reactive-context';
+import { batch, computed, effect, reactive } from '../reactive';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
 class Store<
   T extends Record<string, unknown>,
   DIDeps extends Record<string, unknown> | undefined = undefined,
 > {
-  private localContext = new ReactiveContext();
-
-  private batchManager = new BatchManager();
-
   private listeners = new Map<number, WatchCallback<UnwrappedState<T>>>();
 
   private listenerCounter = 0;
@@ -47,11 +38,11 @@ class Store<
     this.name = name;
 
     this.state = setup({
-      reactive: this.createReactive.bind(this),
-      computed: this.createComputed.bind(this),
-      effect: this.createEffect.bind(this),
+      reactive: reactive,
+      computed: computed,
+      effect: effect,
       query: this.createQuery.bind(this),
-      batch: this.batchManager.batch.bind(this.batchManager),
+      batch: batch,
       DI,
     } as unknown as DefineApi<DIDeps>);
 
@@ -72,34 +63,19 @@ class Store<
     });
   }
 
-  private createReactive<Value>(initialValue: Value): Reactive<Value> {
-    return new ReactiveValue(
-      initialValue,
-      this.localContext,
-      this.batchManager,
-    );
-  }
-
-  private createComputed<Value>(fn: () => Value) {
-    return new ComputedValue(fn, this.localContext, this.batchManager);
-  }
-
-  private createEffect(fn: () => void) {
-    const effect = new Effect(fn, this.localContext, this.batchManager);
-
-    return effect.stop.bind(effect);
-  }
-
-  private createQuery<Data, TError, TOptions>(
-    cb: (options: TOptions) => Promise<Data>,
-    queryOptions?: QueryOptions<Data, TError>,
+  // private createQuery<Data, TError, TOptions>(
+  private createQuery(
+    // cb: (options: TOptions) => Promise<Data>,
+    // queryOptions?: QueryOptions<Data, TError>,
   ) {
-    return new QueryHandler<Data, TError, TOptions>(
-      cb,
-      this.localContext,
-      this.batchManager,
-      queryOptions,
-    );
+    // return new QueryHandler<Data, TError, TOptions>(
+    //   cb,
+    //   this.localContext,
+    //   this.batchManager,
+    //   queryOptions,
+    // );
+
+    return null;
   }
 
   private getSnapshot(): UnwrappedState<T> {

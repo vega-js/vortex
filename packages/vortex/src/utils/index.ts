@@ -11,11 +11,11 @@ export const toObjectKeys = <Obj extends Record<string, unknown>>(
 };
 
 export const isReactive = (value: unknown): value is Reactive<unknown> => {
-  return (value as { type?: unknown })?.type === 'reactive';
+  return (value as { type?: unknown })?.type === '$$reactive';
 };
 
 export const isComputed = (value: unknown): value is Computed<unknown> => {
-  return (value as { type?: unknown })?.type === 'computed';
+  return (value as { type?: unknown })?.type === '$$computed';
 };
 
 export const isQuery = (

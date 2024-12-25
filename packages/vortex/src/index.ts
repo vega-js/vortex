@@ -1,3 +1,5 @@
+export { useStore } from './react';
+
 export { defineStore, DIContainer } from './core';
 
-export { useStore } from './react';
+export { computed, effect, reactive, batch } from './core/reactive';

@@ -4,7 +4,7 @@ type UnknownState = Record<string, unknown>;
 
 export type Reactive<Value> = {
   get value(): Value;
-  set: (value: Value | ((prevValue: Value) => Value)) => void;
+  set value(value: Value | ((prevValue: Value) => Value));
   subscribe: (callback: (value: Value) => void) => () => void;
   reset: () => void;
   type: 'reactive';

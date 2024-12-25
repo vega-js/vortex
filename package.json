@@ -20,8 +20,8 @@
 		"remove:nm": "npx rimraf node_modules ./packages/node_modules",
 		"reset": "npm run remove:dist && npm run remove:nm",
 		"typecheck": "npm run typecheck --workspaces --if-present",
-    "doc:build": "npm run doc-build --workspaces=docs --if-present",
-    "doc:preview": "npm run preview --workspaces=docs --if-present"
+		"doc:build": "npm run doc-build --workspaces=docs --if-present",
+		"doc:preview": "npm run preview --workspaces=docs --if-present"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^1.9.3",

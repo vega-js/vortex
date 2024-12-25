@@ -24,7 +24,9 @@ describe('defineStore', () => {
     const subscriber = vi.fn();
 
     store.subscribe(subscriber);
-    store.action((state) => state.count.set(5));
+    store.action((state) => {
+      state.count.value = 5;
+    });
     await waitMacro();
     expect(store.getSnapshot()).toEqual({ count: 5 });
     expect(subscriber).toHaveBeenCalledTimes(1);
@@ -39,8 +41,9 @@ describe('defineStore', () => {
     const subscriber = vi.fn();
 
     store.subscribe(subscriber);
-    store.action((state) => state.count.set(0));
-    await waitMacro();
+    store.action((state) => {
+      state.count.value = 0;
+    });
     expect(subscriber).not.toHaveBeenCalled();
   });
 
@@ -53,7 +56,9 @@ describe('defineStore', () => {
     const unsubscribe = store.subscribe(subscriber);
 
     unsubscribe();
-    store.action((state) => state.count.set(5));
+    store.action((state) => {
+      state.count.value = 5;
+    });
     expect(subscriber).not.toHaveBeenCalled();
   });
 
@@ -67,11 +72,11 @@ describe('defineStore', () => {
     store.subscribe(subscriber);
 
     store.action(async (state) => {
-      state.count.set(1);
+      state.count.value = 1;
       await waitMacro();
-      state.count.set(2);
+      state.count.value = 2;
       await waitMacro();
-      state.count.set(3);
+      state.count.value = 3;
     });
 
     await waitMacro();
@@ -97,8 +102,9 @@ describe('defineStore', () => {
       return { count, doubleCount };
     });
 
-    store.action((state) => state.count.set(3));
-    await waitMacro();
+    store.action((state) => {
+      state.count.value = 3;
+    });
     expect(effectCallback).toHaveBeenCalledWith(6);
   });
 
@@ -112,10 +118,10 @@ describe('defineStore', () => {
     store.subscribe(subscriber);
 
     store.action((state) => {
-      state.nested.set((prev) => ({
+      state.nested.value = (prev) => ({
         ...prev,
         level1: { level2: { value: 2 } },
-      }));
+      });
     });
 
     await waitMacro();
@@ -158,8 +164,8 @@ describe('defineStore', () => {
     store.subscribe(subscriber);
 
     store.action((state) => {
-      state.count.set(2);
-      state.name.set('Updated');
+      state.count.value = 2;
+      state.name.value = 'Updated';
     });
 
     await waitMacro();
@@ -184,7 +190,9 @@ describe('defineStore', () => {
       return { count };
     });
 
-    store.action((state) => state.count.set(5));
+    store.action((state) => {
+      state.count.value = 5;
+    });
     await waitMacro();
     expect(effectCallback).toHaveBeenCalledWith(5);
   });
@@ -197,11 +205,10 @@ describe('defineStore', () => {
     const subscriber = vi.fn();
 
     store.subscribe(subscriber);
-
     store.action(async (state) => {
-      state.count.set(1);
+      state.count.value = 1;
       await waitMacro();
-      state.count.set(2);
+      state.count.value = 2;
     });
 
     await waitMacro();
