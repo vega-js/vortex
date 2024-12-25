@@ -526,6 +526,7 @@ class Reactive<T = unknown> {
 class Computed<T = unknown> extends Reactive<T> {
   private readonly computeFunction: () => T;
 
+  // @ts-ignore
   public readonly type = '$$computed';
 
   public sources?: DependencyNode = undefined;

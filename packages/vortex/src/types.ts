@@ -32,11 +32,9 @@ export type QueryOptions<TData, TError> = {
 
 export type Query<Data, TError, TOptions> = {
   get value(): QueryData<Data, TError>;
-  set: (
-    value:
-      | QueryData<Data, TError>
-      | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>),
-  ) => void;
+  set value(value:
+    | QueryData<Data, TError>
+    | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>));
   subscribe: (callback: (value: QueryData<Data, TError>) => void) => () => void;
   type: 'query';
   reset(): void;

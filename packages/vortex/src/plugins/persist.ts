@@ -56,15 +56,15 @@ export const persistPlugin =
           const parsedState = JSON.parse(savedState) as UnwrappedState<T>;
 
           store.action((s) => {
-            toObjectKeys(parsedState).forEach((el) => {
+            for (const el of toObjectKeys(parsedState)) {
               if (isReactive(s[el])) {
-                s[el].set(() => parsedState[el]);
+                s[el].value = parsedState[el];
               }
 
               if (isQuery(s[el])) {
-                s[el].set((prev) => ({ ...prev, data: parsedState[el] }));
+                s[el].value = (prev) => ({ ...prev, data: parsedState[el] });
               }
-            });
+            }
           });
         } catch (error) {
           console.error('Error parsing saved state:', error);
