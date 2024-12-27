@@ -669,6 +669,213 @@ class Computed<T = unknown> extends Reactive<T> {
   }
 }
 
+const arrayMethodsToPatch = [
+  'push',
+  'pop',
+  'shift',
+  'unshift',
+  'splice',
+  'sort',
+  'reverse',
+] as const;
+
+const updateArrayMethods = ['push', 'unshift'];
+
+const spliceArrayMethods = 'splice';
+
+type UnknownReactivity = object | unknown[];
+type ArrayMethod = (typeof arrayMethodsToPatch)[number];
+
+class ReactiveArray<T> {
+  private readonly reactiveArray: T[];
+
+  constructor(
+    array: T[],
+    private readonly makeReactive: (value: T) => T,
+    private readonly updateCallback: () => void,
+  ) {
+    this.reactiveArray = array.map(makeReactive);
+    this.makeReactive = makeReactive;
+    this.updateCallback = updateCallback;
+  }
+
+  createReactive() {
+    const self = this;
+
+    return new Proxy(this.reactiveArray, {
+      get(target, prop, receiver) {
+        const value = Reflect.get(target, prop, receiver);
+
+        if (
+          typeof value === 'function' &&
+          arrayMethodsToPatch.includes(prop as ArrayMethod)
+        ) {
+          return (...args: unknown[]) => {
+            const result = value.apply(target, args);
+
+            if (updateArrayMethods.includes(prop as string)) {
+              args.forEach((arg, index) => {
+                target[target.length - args.length + index] = self.makeReactive(
+                  arg as T,
+                );
+              });
+            } else if (prop === spliceArrayMethods && args.length > 2) {
+              for (let i = 2; i < args.length; i++) {
+                args[i] = self.makeReactive(args[i] as T);
+              }
+            }
+
+            self.updateCallback();
+
+            return result;
+          };
+        }
+
+        return value;
+      },
+
+      set(target, prop, value, receiver) {
+        const index = Number(prop);
+
+        if (!Number.isNaN(index)) {
+          value = self.makeReactive(value as T);
+        }
+
+        const result = Reflect.set(target, prop, value, receiver);
+
+        self.updateCallback();
+
+        return result;
+      },
+
+      deleteProperty(target, prop) {
+        const result = Reflect.deleteProperty(target, prop);
+
+        self.updateCallback();
+
+        return result;
+      },
+    });
+  }
+}
+
+class DeepReactive<T = unknown | UnknownReactivity> {
+  public readonly type = '$$reactive';
+
+  private reactive: Reactive<{ inner: T }>;
+
+  private reactiveCache = new WeakMap<object, object>();
+
+  constructor(initialValue: T) {
+    this.reactive = new Reactive({
+      inner: this.makeReactive(initialValue),
+    }) as Reactive<{ inner: T }>;
+  }
+
+  private makeReactive(value: T): T {
+    if (this.isPrimitive(value)) {
+      return value;
+    }
+
+    if (this.reactiveCache.has(value as object)) {
+      return this.reactiveCache.get(value as object) as T;
+    }
+
+    const reactiveValue = Array.isArray(value)
+      ? new ReactiveArray(
+          value,
+          this.makeReactive.bind(this),
+          this.update.bind(this),
+        ).createReactive()
+      : this.defineReactiveObject(value as T & object);
+
+    this.reactiveCache.set(value as object, reactiveValue);
+
+    return reactiveValue as T;
+  }
+
+  private isPrimitive(value: unknown): value is Exclude<T, UnknownReactivity> {
+    return typeof value !== 'object' || value === null;
+  }
+
+  private defineReactiveObject(obj: T & object): object {
+    const proxy = new Proxy(obj, {
+      set: (target, prop: keyof T, value) => {
+        const isNewProperty = !(prop in target);
+
+        target[prop] = value;
+
+        if (isNewProperty) {
+          this.makeReactiveProperty(target, prop);
+        }
+
+        this.update();
+
+        return true;
+      },
+      deleteProperty: (target, prop: keyof T) => {
+        if (prop in target) {
+          delete target[prop];
+          this.update();
+        }
+
+        return true;
+      },
+    } as ProxyHandler<T & object>);
+
+    Object.keys(obj).forEach((key) =>
+      this.makeReactiveProperty(obj, key as keyof T),
+    );
+
+    return proxy;
+  }
+
+  private makeReactiveProperty(target: T & object, prop: keyof T) {
+    let value = target[prop] as T;
+
+    value = this.makeReactive(value);
+
+    Object.defineProperty(target, prop, {
+      get: () => value,
+      set: (newValue) => {
+        if (newValue !== value) {
+          value = this.makeReactive(newValue);
+        }
+      },
+      configurable: true,
+      enumerable: true,
+    });
+  }
+
+  private update() {
+    this.reactive.value = { inner: this.reactive.value.inner };
+  }
+
+  public get value() {
+    return this.reactive.value.inner;
+  }
+
+  public set value(newValue: T) {
+    this.reactive.value = { inner: this.makeReactive(newValue) };
+  }
+
+  public valueOf() {
+    return this.reactive.valueOf().inner;
+  }
+
+  public toJSON() {
+    return this.reactive.toJSON().inner;
+  }
+
+  public peek() {
+    return this.reactive.peek().inner;
+  }
+
+  public subscribe(callback: (value: T) => void) {
+    return this.reactive.subscribe(({ inner }) => callback(inner));
+  }
+}
+
 function reactive<T>(value: T): Reactive<T> {
   return new Reactive(value);
 }
@@ -681,4 +888,7 @@ function batch<T>(callback: () => T): T {
   return BatchProcessor.batch(callback);
 }
 
-export { reactive, computed, batch, effect };
+function deepReactive<T>(value: T): DeepReactive<T> {
+  return new DeepReactive(value);
+}
+export { reactive, computed, batch, deepReactive, effect };
