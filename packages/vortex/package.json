@@ -27,30 +27,30 @@
   "sideEffects": false,
   "license": "MIT",
   "author": "Andrey Zlobin",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
+      "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./react": {
-      "import": "./dist/react/index.js",
+      "import": "./dist/react/index.mjs",
       "require": "./dist/react/index.js",
       "types": "./dist/react/index.d.ts"
     },
     "./plugins": {
-      "import": "./dist/plugins/index.js",
+      "import": "./dist/plugins/index.mjs",
       "require": "./dist/plugins/index.js",
       "types": "./dist/plugins/index.d.ts"
     }
   },
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "modern build",
-    "build:watch": "modern build -w",
+    "build": "rslib  build",
+    "build:watch": "rslib  build -w",
     "ci-publish": "npm publish --access public",
     "eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx . --config .eslintrc",
     "lint": "npm run eslint && npm run typecheck",

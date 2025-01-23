@@ -11,10 +11,11 @@
     "node_modules",
     "dist",
     "*.ts",
-    "**/*.test.tsx",
-    "**/*.test.ts",
-    "**/*.spec.ts",
-    "**/*.stories.tsx",
+    "src/types.ts",
+    "./**/*.test.tsx",
+    "./**/*.test.ts",
+    "./**/*.spec.ts",
+    "./**/*.stories.tsx",
     "src/docs"
   ]
 }

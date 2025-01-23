@@ -27,6 +27,7 @@
     "@biomejs/biome": "^1.9.3",
     "@changesets/cli": "^2.27.9",
     "@commitlint/config-conventional": "^19.5.0",
+    "@rslib/core": "^0.3.2",
     "@modern-js/module-tools": "2.60.1",
     "@modern-js/runtime": "2.60.1",
     "@self-kit/eslint-config-node": "^1.0.5",
