@@ -147,7 +147,7 @@ export class Reactive<T = any> implements Dependency {
   }
 
   subscribe(callback: (value: T) => void) {
-    const effectInst = new Effect(() => callback(this.currentValue));
+    const effectInst = new Effect(() => callback(this.value));
 
     effectInst.run();
 
@@ -216,7 +216,7 @@ export class Computed<T = any> implements Subscriber, Dependency {
   }
 
   subscribe(callback: (value: T) => void) {
-    const effectInst = new Effect(() => callback(this.currentValue!));
+    const effectInst = new Effect(() => callback(this.value));
 
     effectInst.run();
 
@@ -250,7 +250,6 @@ export class QueryHandler<Data, TError, TOptions>
     private readonly options?: QueryOptions<Data, TError>,
   ) {
     this.#state = new Reactive(createInitial<Data, TError>());
-
     this.#lastOptions = undefined;
     this.#onError = this.options?.onError;
     this.#onSuccess = this.options?.onSuccess;
@@ -270,6 +269,7 @@ export class QueryHandler<Data, TError, TOptions>
       | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>),
   ) => {
     const newValue = typeof value === 'function' ? value(this.value) : value;
+
     this.#state.value = newValue;
   };
 
