@@ -21,7 +21,7 @@ export const isComputed = (value: unknown): value is Computed<unknown> => {
 export const isQuery = (
   value: unknown,
 ): value is Query<unknown, unknown, unknown> => {
-  return (value as { type?: unknown })?.type === 'query';
+  return (value as { type?: unknown })?.type === '$$query';
 };
 
 export const isReactiveUnit = (

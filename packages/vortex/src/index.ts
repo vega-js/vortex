@@ -5,5 +5,4 @@ export {
   effect,
   reactive,
   batch,
-  deepReactive,
 } from './core/reactive';

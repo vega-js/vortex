@@ -1,14 +1,14 @@
 import type {
   DefineApi,
   DefineStore,
-  // QueryOptions,
+  QueryOptions,
   Reactive,
   StoreOptions,
   UnwrappedState,
   WatchCallback,
 } from '../../types';
 import { isReactiveUnit, toObjectKeys } from '../../utils';
-import { batch, computed, effect, reactive } from '../reactive';
+import { QueryHandler, batch, computed, effect, reactive } from '../reactive';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
 class Store<
@@ -63,19 +63,11 @@ class Store<
     });
   }
 
-  // private createQuery<Data, TError, TOptions>(
-  private createQuery(
-    // cb: (options: TOptions) => Promise<Data>,
-    // queryOptions?: QueryOptions<Data, TError>,
+  private createQuery<Data, TError, TOptions>(
+    cb: (options: TOptions) => Promise<Data>,
+    queryOptions?: QueryOptions<Data, TError>,
   ) {
-    // return new QueryHandler<Data, TError, TOptions>(
-    //   cb,
-    //   this.localContext,
-    //   this.batchManager,
-    //   queryOptions,
-    // );
-
-    return null;
+    return new QueryHandler<Data, TError, TOptions>(cb, queryOptions);
   }
 
   private getSnapshot(): UnwrappedState<T> {

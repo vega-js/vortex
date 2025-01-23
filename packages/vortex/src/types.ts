@@ -36,7 +36,7 @@ export type Query<Data, TError, TOptions> = {
     | QueryData<Data, TError>
     | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>));
   subscribe: (callback: (value: QueryData<Data, TError>) => void) => () => void;
-  type: 'query';
+  type: '$$query';
   reset(): void;
   refetch(): Promise<void>;
   run: (options: TOptions) => Promise<void>;
