@@ -1,6 +1,8 @@
-import type { Computed, Query, Reactive } from '../types';
+import type { Computed, Mutation, Query, Reactive } from '../types';
 
 export * from './is-equal';
+
+export * from './retry';
 
 export * from './shallow-equal';
 
@@ -22,6 +24,12 @@ export const isQuery = (
   value: unknown,
 ): value is Query<unknown, unknown, unknown> => {
   return (value as { type?: unknown })?.type === '$$query';
+};
+
+export const isMutation = (
+  value: unknown,
+): value is Mutation<unknown, unknown, unknown> => {
+  return (value as { type?: unknown })?.type === '$$mutation';
 };
 
 export const isReactiveUnit = (

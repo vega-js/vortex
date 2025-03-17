@@ -1,52 +1,75 @@
-import type { DefineStore, NonFunctionKeys, UnwrappedState } from '../../types';
+import { PERSIST_NAME } from '../../constants';
+import type {
+  DefineStore,
+  NonFunctionKeys,
+  UnknownState,
+  UnwrappedState,
+} from '../../types';
 import { isQuery, isReactive, toObjectKeys } from '../../utils';
-import { LocalStorageAdapter } from './adapters';
+import { MemoryStorage, StorageAdapter } from './adapters';
 import type { PersistStorage } from './types';
 
 export interface PersistOptions<T> {
   key: string;
-  properties?: Array<NonFunctionKeys<T>>;
+  version?: number;
+  migrations?: Record<number, (state: UnwrappedState<T>) => UnwrappedState<T>>;
+  properties?: NonFunctionKeys<T>[];
   storage?: PersistStorage;
+  onBeforeHydration?: () => void;
+  onHydrated?: (state: UnwrappedState<T>) => void;
+  onHydrationError?: (error: unknown) => void;
 }
 
-const createMapStorage = () => {
-  const storage = new Map<string, string>();
+interface PersistedData<T> {
+  version: number;
+  data: Partial<UnwrappedState<T>>;
+}
 
-  return {
-    getItem: <T = unknown>(key: string): T | null => {
-      try {
-        const item = storage.get(key);
+export interface PersistPlugin<T extends UnknownState> {
+  remove: () => void;
+  apply: (store: DefineStore<T>) => () => void;
+}
 
-        return item !== undefined ? (JSON.parse(item) as T) : null;
-      } catch {
-        throw new Error('getItem');
-      }
-    },
-    setItem: <T = unknown>(key: string, value: T) => {
-      try {
-        const serializedValue =
-          value === undefined ? 'undefined' : JSON.stringify(value);
-
-        storage.set(key, serializedValue);
-      } catch {
-        throw new Error('setItem');
-      }
-    },
-    removeItem: (key: string) => storage.delete(key),
-  };
+type GlobalPersistSetting = {
+  isReady: boolean;
+  globalStorage?: PersistStorage | null;
 };
 
-const getDefaultStorage = () =>
-  typeof window === 'undefined'
-    ? createMapStorage()
-    : new LocalStorageAdapter();
+const persistPluginGlobalSetting: GlobalPersistSetting = {
+  isReady: false,
+  globalStorage: null,
+};
 
-export const persistPlugin =
-  <T extends Record<string, unknown>>(options: PersistOptions<T>) =>
-  (store: DefineStore<T>) => {
-    const { key, properties, storage = getDefaultStorage() } = options;
+export const configurePersistPlugin = ({
+  globalStorage = new MemoryStorage(),
+}: Omit<GlobalPersistSetting, 'isReady'>) => {
+  if (persistPluginGlobalSetting.isReady) {
+    throw new Error('Persist plugin is already configured');
+  }
+
+  persistPluginGlobalSetting.globalStorage = globalStorage;
+  persistPluginGlobalSetting.isReady = true;
+};
+
+export const persistPlugin = <T extends UnknownState>(
+  options: PersistOptions<T>,
+): PersistPlugin<T> => {
+  const {
+    key,
+    properties,
+    onBeforeHydration,
+    onHydrated,
+    onHydrationError,
+    migrations,
+    version = 0,
+    storage = new StorageAdapter(persistPluginGlobalSetting.globalStorage!),
+  } = options;
+
+  const remove = () => storage.removeItem(key);
+
+  const apply = (store: DefineStore<T>) => {
     const state = store.getSnapshot();
-    const fields: Array<keyof T> = properties
+    const fields: (keyof T)[] = properties
       ? Array.from(new Set(properties))
       : toObjectKeys(state).filter(
           (field_key) =>
@@ -70,29 +93,61 @@ export const persistPlugin =
         {} as Partial<UnwrappedState<T>>,
       );
 
-    try {
-      const parsedState = storage.getItem<UnwrappedState<T>>(key);
+    (async () => {
+      try {
+        onBeforeHydration?.();
 
-      if (parsedState) {
-        store.action((s) => {
-          toObjectKeys(parsedState).forEach((el) => {
-            const parsedValue = parsedState[el];
+        const persisted = await storage.getItem<PersistedData<T>>(key);
 
-            if (isReactive(s[el])) {
-              s[el].value = () => parsedValue;
+        let stateToHydrate: Partial<UnwrappedState<T>> | undefined = undefined;
+
+        if (persisted) {
+          const persistedVersion = persisted.version;
+
+          stateToHydrate = persisted.data;
+
+          if (migrations && persistedVersion < version) {
+            for (let v = persistedVersion; v < version; v++) {
+              const migrate = migrations[v];
+
+              if (migrate) {
+                stateToHydrate = migrate(stateToHydrate as UnwrappedState<T>);
+              }
             }
 
-            if (isQuery(s[el])) {
-              s[el].value = (prev) => ({ ...prev, data: parsedValue });
-            }
+            storage.setItem(key, {
+              version,
+              data: stateToHydrate,
+            });
+          }
+
+          store.action((s) => {
+            toObjectKeys(stateToHydrate!).forEach((el) => {
+              const parsedValue = stateToHydrate![el];
+
+              if (isReactive(s[el])) {
+                s[el].value = parsedValue;
+              }
+
+              console.log(isQuery(s[el]));
+
+              const query = s[el];
+
+              if (isQuery(query)) {
+                query.update(parsedValue);
+              }
+            });
           });
-        });
-      } else {
-        storage.setItem(key, toNewState(state));
+
+          onHydrated?.(stateToHydrate as UnwrappedState<T>);
+        } else {
+          storage.setItem(key, { version, data: toNewState(state) });
+        }
+      } catch (error) {
+        onHydrationError?.(error);
+        storage.removeItem(key);
       }
-    } catch {
-      storage.removeItem(key);
-    }
+    })();
 
     let isSaving = false;
 
@@ -101,9 +156,14 @@ export const persistPlugin =
         isSaving = true;
 
         Promise.resolve().then(() => {
-          storage.setItem(key, toNewState(newState));
+          storage.setItem(key, { version, data: toNewState(newState) });
           isSaving = false;
         });
       }
     });
   };
+
+  apply.pluginName = PERSIST_NAME;
+
+  return { remove, apply };
+};

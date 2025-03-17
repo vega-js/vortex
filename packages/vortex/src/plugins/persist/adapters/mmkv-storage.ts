@@ -1,8 +1,9 @@
-import { MMKV } from 'react-native-mmkv';
+// import { MMKV } from 'react-native-mmkv';
+
 import type { PersistStorage } from '../types';
 
 export class MmkvStorageAdapter implements PersistStorage {
-  private readonly storage = new MMKV();
+  private readonly storage = localStorage;
 
   private assertStorageAvailable(): void {
     if (!this.storage) {

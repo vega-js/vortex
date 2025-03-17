@@ -1,8 +1,14 @@
 export { defineStore, DIContainer } from './core';
 
 export {
+  batch,
   computed,
   effect,
   reactive,
-  batch,
+  query,
+  mutation,
 } from './core/reactive';
+
+export * from './plugins';
+
+export * from './react';

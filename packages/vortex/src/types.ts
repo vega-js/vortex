@@ -1,6 +1,7 @@
 import type { DIContainer } from './core';
+import { type RetryOptions } from './utils';
 
-type UnknownState = Record<string, unknown>;
+export type UnknownState = Record<string, unknown>;
 
 export type Reactive<Value> = {
   get value(): Value;
@@ -22,24 +23,55 @@ export type QueryData<Data, TError> = {
   isError: boolean;
   error: TError | null;
   data: Data | undefined;
+  isIdle: boolean;
+};
+
+export type MutationState<TError> = {
+  isLoading: boolean;
+  isSuccess: boolean;
+  isError: boolean;
+  error: TError | null;
+  isIdle: boolean;
 };
 
 export type QueryOptions<TData, TError> = {
   isAutorun?: boolean;
   onSuccess?: (data: TData) => void;
   onError?: (error: TError) => void;
+  enable?: () => boolean;
+  retry?: RetryOptions;
+  stopPollingOnError?: boolean;
+  keepDataOnError?: boolean;
 };
 
-export type Query<Data, TError, TOptions> = {
+export type MutationOptions<
+  TData = unknown,
+  TError = unknown,
+  TOptions = unknown,
+> = {
+  onSuccess?: (data: TData, options: TOptions) => void;
+  onError?: (error: TError, options: TOptions) => void;
+};
+
+export type Mutation<Data, TError, TOptions> = {
+  state: MutationState<TError>;
+  type: '$$mutation';
+  reset(): void;
+  runSync: (options: TOptions) => void;
+  runAsync: (options: TOptions) => Promise<Data | undefined>;
+};
+
+export type Query<Data, TError = unknown, TOptions = void> = {
   get value(): QueryData<Data, TError>;
-  set value(value:
-    | QueryData<Data, TError>
-    | ((prevValue: QueryData<Data, TError>) => QueryData<Data, TError>));
+  set value(value: QueryData<Data, TError>);
   subscribe: (callback: (value: QueryData<Data, TError>) => void) => () => void;
   type: '$$query';
   reset(): void;
-  refetch(): Promise<void>;
-  run: (options: TOptions) => Promise<void>;
+  update(value: Data | ((value: Data | undefined) => Data)): void;
+  refetch(): Promise<Data>;
+  startPolling(interval: number, immediately?: boolean): void;
+  stopPolling(): void;
+  run: (options: TOptions) => Promise<Data>;
 };
 
 export type UnwrappedState<T = UnknownState> = {
@@ -47,9 +79,14 @@ export type UnwrappedState<T = UnknownState> = {
     ? V
     : T[K] extends Computed<infer V>
       ? V
-      : T[K] extends Query<infer D, infer E, infer O>
+      : // Query
+        T[K] extends Query<infer D, infer E, infer O>
         ? QueryData<D, E> & Record<never, O>
-        : T[K];
+        : // Mutation
+          T[K] extends Mutation<infer D, infer E, infer O>
+          ? Pick<Mutation<D, E, O>, 'reset' | 'runAsync' | 'runSync'> &
+              MutationState<E>
+          : T[K];
 };
 
 export type NonFunctionKeys<T> = {
@@ -71,21 +108,35 @@ export type DefineApi<Deps = Record<string, unknown> | undefined> = {
   computed: <T>(fn: () => T) => Computed<T>;
   effect: (fn: () => void) => () => void;
   batch: (task: () => void) => void;
+  /**
+   * @deprecated please don't use DI
+   * */
   DI: Deps extends undefined ? never : DIContainer<Deps>;
-
-  query: <Data, TError, TOptions = void>(
+  query: <Data, TError = unknown, TOptions = void>(
     cb: (options: TOptions) => Promise<Data>,
     options?: QueryOptions<Data, TError>,
   ) => Query<Data, TError, TOptions>;
+
+  mutation: <Data, TError, TOptions = void>(
+    cb: (options: TOptions) => Promise<Data>,
+    options?: MutationOptions<Data, TError, TOptions>,
+  ) => Mutation<Data, TError, TOptions>;
 };
 
-export type Plugin<T extends UnknownState> = (store: DefineStore<T>) => void;
+export type Plugin<T extends UnknownState> = ((
+  store: DefineStore<T>,
+) => void) & {
+  pluginName?: string;
+};
 
 export type StoreOptions<
   T extends UnknownState,
   Deps = Record<string, unknown> | undefined,
 > = {
   plugins?: Plugin<T>[];
+  /**
+   * @deprecated please don't use DI
+   * */
   DI?: DIContainer<Deps>;
   name?: string;
 };

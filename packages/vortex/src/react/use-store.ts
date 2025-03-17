@@ -1,10 +1,13 @@
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import type { DefineStore, UnwrappedState } from '../types';
 import { shallowEqual } from '../utils';
 
 export const useStore = <T extends Record<string, unknown>>(
-  store: DefineStore<T>,
+  instance: (() => DefineStore<T>) | DefineStore<T>,
 ): UnwrappedState<T> => {
+  const [store] = useState<DefineStore<T>>(() =>
+    typeof instance === 'function' ? instance() : instance,
+  );
   const usedDependencies = useRef<Set<keyof UnwrappedState<T>>>(new Set());
   const snapshotProxyRef = useRef<UnwrappedState<T> | null>(null);
 

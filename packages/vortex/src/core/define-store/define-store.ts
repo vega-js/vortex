@@ -1,14 +1,23 @@
+import { PERSIST_NAME } from '../../constants';
 import type {
   DefineApi,
   DefineStore,
+  MutationOptions,
   QueryOptions,
   Reactive,
   StoreOptions,
   UnwrappedState,
   WatchCallback,
 } from '../../types';
-import { isReactiveUnit, toObjectKeys } from '../../utils';
-import { QueryHandler, batch, computed, effect, reactive } from '../reactive';
+import { isMutation, isReactiveUnit, toObjectKeys } from '../../utils';
+import {
+  MutationHandler,
+  QueryHandler,
+  batch,
+  computed,
+  effect,
+  reactive,
+} from '../reactive';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
 class Store<
@@ -29,9 +38,11 @@ class Store<
 
   private readonly name: string;
 
+  public isPersist = false;
+
   constructor(
     setup: (args: DefineApi<DIDeps>) => T,
-    options: StoreOptions<T, DIDeps> = {},
+    private readonly options: StoreOptions<T, DIDeps> = {},
   ) {
     const { plugins = [], DI, name = `unknown_${Date.now()}` } = options;
 
@@ -42,6 +53,7 @@ class Store<
       computed: computed,
       effect: effect,
       query: this.createQuery.bind(this),
+      mutation: this.createMutation.bind(this),
       batch: batch,
       DI,
     } as unknown as DefineApi<DIDeps>);
@@ -50,13 +62,20 @@ class Store<
 
     this.stateKeys = stateKeys;
 
-    this.reactiveUnits = stateKeys.filter((key) =>
-      isReactiveUnit(this.state[key]),
+    this.reactiveUnits = stateKeys.filter(
+      (key) => isReactiveUnit(this.state[key]) || isMutation(this.state[key]),
     );
 
     this.prevState = this.getSnapshot();
     this.cleanupAll = this.observeReactivity();
-    plugins.forEach((plugin) => plugin(this.getStore()));
+
+    for (const plugin of plugins) {
+      plugin(this.getStore());
+
+      if (plugin.pluginName === PERSIST_NAME) {
+        this.isPersist = true;
+      }
+    }
 
     Promise.resolve().then(() => {
       initDevtoolsStore(this.name, this.prevState);
@@ -70,6 +89,13 @@ class Store<
     return new QueryHandler<Data, TError, TOptions>(cb, queryOptions);
   }
 
+  private createMutation<Data, TError, TOptions>(
+    cb: (options: TOptions) => Promise<Data>,
+    mutationOptions?: MutationOptions<Data, TError, TOptions>,
+  ) {
+    return new MutationHandler<Data, TError, TOptions>(cb, mutationOptions);
+  }
+
   private getSnapshot(): UnwrappedState<T> {
     const newSnapshot = {} as UnwrappedState<T>;
 
@@ -80,6 +106,15 @@ class Store<
       newSnapshot[key] = isReactiveUnit(reactiveUnit)
         ? (reactiveUnit.value as UnwrappedState<T>[typeof key])
         : (reactiveUnit as UnwrappedState<T>[typeof key]);
+
+      if (isMutation(reactiveUnit)) {
+        newSnapshot[key] = {
+          ...reactiveUnit.state,
+          runSync: reactiveUnit.runSync,
+          runAsync: reactiveUnit.runAsync,
+          reset: reactiveUnit.reset,
+        } as UnwrappedState<T>[typeof key];
+      }
     }
 
     return newSnapshot;
@@ -125,7 +160,17 @@ class Store<
           batchedState = { ...this.prevState };
         }
 
-        batchedState[key] = value as UnwrappedState<T>[typeof key];
+        if (isMutation(this.state[key])) {
+          batchedState[key] = {
+            ...(value || {}),
+            runSync: this.state[key].runSync,
+            runAsync: this.state[key].runAsync,
+            reset: this.state[key].reset,
+          } as UnwrappedState<T>[typeof key];
+        } else {
+          batchedState[key] = value as UnwrappedState<T>[typeof key];
+        }
+
         triggerBatchUpdate();
       });
 
@@ -153,7 +198,9 @@ class Store<
     };
   }
 
-  public cleanupAll(): void {}
+  public cleanupAll(): void {
+    this.options?.DI?.destroy?.();
+  }
 
   public getStore(): DefineStore<T> {
     return {
@@ -166,14 +213,48 @@ class Store<
   }
 }
 
-export const defineStore = <
+function getLazy<T>(factory: () => T): () => T {
+  let instance: T | null = null;
+
+  return () => {
+    if (instance === null) {
+      instance = factory();
+    }
+
+    return instance;
+  };
+}
+
+export function defineStore<
   T extends Record<string, unknown>,
   DIDeps extends Record<string, unknown> | undefined = undefined,
 >(
   setup: (args: DefineApi<DIDeps>) => T,
-  options: StoreOptions<T, DIDeps> = {},
-): DefineStore<T> => {
-  const storeInstance = new Store(setup, options);
+  options?: StoreOptions<T, DIDeps>,
+): DefineStore<T> {
+  return new Store(setup, options).getStore();
+}
 
-  return storeInstance.getStore();
-};
+export function defineLazyStore<
+  T extends Record<string, unknown>,
+  DIDeps extends Record<string, unknown> | undefined = undefined,
+>(
+  setup: (args: DefineApi<DIDeps>) => T,
+  options?: StoreOptions<T, DIDeps> & {
+    singleton?: boolean;
+  },
+): () => DefineStore<T> {
+  let storeInstance: DefineStore<T> | null;
+
+  return getLazy(() => {
+    if (options?.singleton) {
+      if (!storeInstance) {
+        storeInstance = new Store(setup, options).getStore();
+      }
+
+      return storeInstance;
+    }
+
+    return new Store(setup, options).getStore();
+  });
+}
