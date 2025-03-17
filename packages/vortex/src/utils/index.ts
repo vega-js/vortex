@@ -1,7 +1,5 @@
 import type { Computed, Mutation, Query, Reactive } from '../types';
 
-export * from './is-equal';
-
 export * from './retry';
 
 export * from './shallow-equal';

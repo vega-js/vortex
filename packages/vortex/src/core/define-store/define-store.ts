@@ -20,10 +20,7 @@ import {
 } from '../reactive';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
-class Store<
-  T extends Record<string, unknown>,
-  DIDeps extends Record<string, unknown> | undefined = undefined,
-> {
+class Store<T extends Record<string, unknown>> {
   private listeners = new Map<number, WatchCallback<UnwrappedState<T>>>();
 
   private listenerCounter = 0;
@@ -40,11 +37,8 @@ class Store<
 
   public isPersist = false;
 
-  constructor(
-    setup: (args: DefineApi<DIDeps>) => T,
-    private readonly options: StoreOptions<T, DIDeps> = {},
-  ) {
-    const { plugins = [], DI, name = `unknown_${Date.now()}` } = options;
+  constructor(setup: (args: DefineApi) => T, options: StoreOptions<T> = {}) {
+    const { plugins = [], name = `unknown_${Date.now()}` } = options;
 
     this.name = name;
 
@@ -55,8 +49,7 @@ class Store<
       query: this.createQuery.bind(this),
       mutation: this.createMutation.bind(this),
       batch: batch,
-      DI,
-    } as unknown as DefineApi<DIDeps>);
+    } as unknown as DefineApi);
 
     const stateKeys = toObjectKeys(this.state);
 
@@ -199,7 +192,8 @@ class Store<
   }
 
   public cleanupAll(): void {
-    this.options?.DI?.destroy?.();
+    this.listenerCounter = 0;
+    this.listeners.clear();
   }
 
   public getStore(): DefineStore<T> {
@@ -225,22 +219,16 @@ function getLazy<T>(factory: () => T): () => T {
   };
 }
 
-export function defineStore<
-  T extends Record<string, unknown>,
-  DIDeps extends Record<string, unknown> | undefined = undefined,
->(
-  setup: (args: DefineApi<DIDeps>) => T,
-  options?: StoreOptions<T, DIDeps>,
+export function defineStore<T extends Record<string, unknown>>(
+  setup: (args: DefineApi) => T,
+  options?: StoreOptions<T>,
 ): DefineStore<T> {
   return new Store(setup, options).getStore();
 }
 
-export function defineLazyStore<
-  T extends Record<string, unknown>,
-  DIDeps extends Record<string, unknown> | undefined = undefined,
->(
-  setup: (args: DefineApi<DIDeps>) => T,
-  options?: StoreOptions<T, DIDeps> & {
+export function defineLazyStore<T extends Record<string, unknown>>(
+  setup: (args: DefineApi) => T,
+  options?: StoreOptions<T> & {
     singleton?: boolean;
   },
 ): () => DefineStore<T> {

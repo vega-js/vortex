@@ -20,6 +20,7 @@ export default defineConfig({
   },
   output: {
     minify: true,
+    target: 'web',
   },
   lib: [
     {

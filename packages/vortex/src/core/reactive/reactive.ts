@@ -697,16 +697,14 @@ export function batch(cb: () => void) {
   }
 }
 
-export function reactive<T>(): Reactive<T | undefined>;
-
-export function reactive<T>(oldValue: T): Reactive<T>;
-
 /**
  * Creates a reactive state container.
  * @template T
  * @param {T} [oldValue] - Initial value for the reactive state.
  * @returns {Reactive<T | undefined>} A reactive object.
  */
+export function reactive<T>(): Reactive<T | undefined>;
+export function reactive<T>(oldValue: T): Reactive<T>;
 export function reactive<T>(oldValue?: T): Reactive<T | undefined> {
   return new Reactive(oldValue);
 }

@@ -1,5 +1,4 @@
-import type { DIContainer } from './core';
-import { type RetryOptions } from './utils';
+import type { RetryOptions } from './utils';
 
 export type UnknownState = Record<string, unknown>;
 
@@ -103,15 +102,11 @@ export type DefineStore<T extends UnknownState> = {
   cleanupAll(): void;
 };
 
-export type DefineApi<Deps = Record<string, unknown> | undefined> = {
+export type DefineApi = {
   reactive: <Value>(initialValue: Value) => Reactive<Value>;
   computed: <T>(fn: () => T) => Computed<T>;
   effect: (fn: () => void) => () => void;
   batch: (task: () => void) => void;
-  /**
-   * @deprecated please don't use DI
-   * */
-  DI: Deps extends undefined ? never : DIContainer<Deps>;
   query: <Data, TError = unknown, TOptions = void>(
     cb: (options: TOptions) => Promise<Data>,
     options?: QueryOptions<Data, TError>,
@@ -129,14 +124,7 @@ export type Plugin<T extends UnknownState> = ((
   pluginName?: string;
 };
 
-export type StoreOptions<
-  T extends UnknownState,
-  Deps = Record<string, unknown> | undefined,
-> = {
+export type StoreOptions<T extends UnknownState> = {
   plugins?: Plugin<T>[];
-  /**
-   * @deprecated please don't use DI
-   * */
-  DI?: DIContainer<Deps>;
   name?: string;
 };

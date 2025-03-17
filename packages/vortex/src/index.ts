@@ -1,4 +1,4 @@
-export { defineStore, DIContainer } from './core';
+export { defineStore } from './core';
 
 export {
   batch,
