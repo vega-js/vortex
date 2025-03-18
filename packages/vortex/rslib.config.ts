@@ -10,7 +10,6 @@ export default defineConfig({
         'src/**/*.ts',
         'src/**/*.tsx',
 
-        '!src/types.ts',
         '!src/**/*.spec.ts',
         '!src/**/*.spec.tsx',
         '!src/**/*.test.ts',
