@@ -1,4 +1,4 @@
-export { defineStore } from './core';
+export { defineStore, defineLazyStore } from './core';
 
 export {
   batch,
