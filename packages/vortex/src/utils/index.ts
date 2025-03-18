@@ -2,8 +2,6 @@ import type { Computed, Mutation, Query, Reactive } from '../types';
 
 export * from './retry';
 
-export * from './shallow-equal';
-
 export const toObjectKeys = <Obj extends Record<string, unknown>>(
   obj: Obj,
 ): (keyof Obj)[] => {

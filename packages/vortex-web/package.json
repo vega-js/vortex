@@ -1,18 +1,15 @@
 {
-  "name": "@vegajs/vortex",
+  "name": "@vegajs/vortex-web",
   "version": "0.0.0",
-  "description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
+  "description": "🌀 Utility functions for using Vortex in web environments.",
   "keywords": [
     "state management",
-    "state",
-    "manager",
-    "management",
-    "redux",
+    "web",
+    "utilities",
     "store",
     "reactive",
     "dependency injection",
     "react",
-    "state",
     "flux"
   ],
   "homepage": "https://docs-vortex.netlify.app",
@@ -22,7 +19,7 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/vega-js/vortex",
-    "directory": "packages/vortex"
+    "directory": "packages/vortex-web"
   },
   "sideEffects": false,
   "license": "MIT",
@@ -35,32 +32,22 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./react": {
-      "import": "./dist/react/index.mjs",
-      "require": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
-    },
-    "./plugins": {
-      "import": "./dist/plugins/index.mjs",
-      "require": "./dist/plugins/index.js",
-      "types": "./dist/plugins/index.d.ts"
     }
   },
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "rslib  build",
-    "build:watch": "rslib  build -w",
+    "build": "rslib build",
+    "build:watch": "rslib build -w",
     "ci-publish": "npm publish --access public",
     "eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx . --config .eslintrc",
     "lint": "npm run eslint && npm run typecheck",
-    "lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx  . --fix --config .eslintrc --quiet",
-    "tests": "vitest run",
-    "tests:ci": "vitest run --reporter=junit --outputFile.junit=junit.xml",
-    "tests:watch": "vitest",
+    "lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx . --fix --config .eslintrc --quiet",
+    "test": "vitest run",
+    "test:ci": "vitest run --reporter=junit --outputFile.junit=junit.xml",
+    "test:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "alien-signals": ">=1.0.0"
+    "@vegajs/vortex": "*"
   }
 }

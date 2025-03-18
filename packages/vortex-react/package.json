@@ -1,18 +1,14 @@
 {
-  "name": "@vegajs/vortex",
+  "name": "@vegajs/vortex-react",
   "version": "0.0.0",
-  "description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
+  "description": "🌀 React bindings for Vortex, a next-gen state management library.",
   "keywords": [
     "state management",
-    "state",
-    "manager",
-    "management",
-    "redux",
+    "react",
+    "hooks",
+    "context",
     "store",
     "reactive",
-    "dependency injection",
-    "react",
-    "state",
     "flux"
   ],
   "homepage": "https://docs-vortex.netlify.app",
@@ -35,16 +31,6 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./react": {
-      "import": "./dist/react/index.mjs",
-      "require": "./dist/react/index.js",
-      "types": "./dist/react/index.d.ts"
-    },
-    "./plugins": {
-      "import": "./dist/plugins/index.mjs",
-      "require": "./dist/plugins/index.js",
-      "types": "./dist/plugins/index.d.ts"
     }
   },
   "files": ["dist", "README.md"],
@@ -61,6 +47,15 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
-    "alien-signals": ">=1.0.0"
+    "@vegajs/vortex": "*",
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@types/react": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
   }
 }

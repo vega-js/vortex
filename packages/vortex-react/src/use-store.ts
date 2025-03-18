@@ -1,6 +1,6 @@
+import type { DefineStore, UnwrappedState } from '@vegajs/vortex';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import type { DefineStore, UnwrappedState } from '../types';
-import { shallowEqual } from '../utils';
+import { shallowEqual } from './utils';
 
 export const useStore = <T extends Record<string, unknown>>(
   instance: (() => DefineStore<T>) | DefineStore<T>,

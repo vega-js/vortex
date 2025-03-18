@@ -1,4 +1,4 @@
-import type { PersistStorage } from '../types';
+import type { PersistStorage } from '@vegajs/vortex';
 
 export class LocalStorageAdapter implements PersistStorage {
   private readonly storage?: Storage;

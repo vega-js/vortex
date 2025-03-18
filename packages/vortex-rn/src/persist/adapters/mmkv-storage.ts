@@ -1,13 +1,12 @@
-// import { MMKV } from 'react-native-mmkv';
-
-import type { PersistStorage } from '../types';
+import type { PersistStorage } from '@vegajs/vortex';
+import { MMKV } from 'react-native-mmkv';
 
 export class MmkvStorageAdapter implements PersistStorage {
-  private readonly storage = localStorage;
+  private readonly storage = new MMKV();
 
   private assertStorageAvailable(): void {
     if (!this.storage) {
-      throw new Error('localStorage is not supported');
+      throw new Error('Mmkv is not supported');
     }
   }
 

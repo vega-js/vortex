@@ -1,4 +1,4 @@
-import { type PersistStorage } from '../types';
+import type { PersistStorage } from '../types';
 
 export class StorageAdapter implements PersistStorage {
   private adapter: PersistStorage;

@@ -11,4 +11,4 @@ export {
 
 export * from './plugins';
 
-export * from './react';
+export * from './types';

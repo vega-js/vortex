@@ -1,5 +1,5 @@
+import { reactive } from '@vegajs/vortex';
 import { useCallback, useRef, useSyncExternalStore } from 'react';
-import { reactive } from '../core/reactive';
 
 /**
  * Represents a reactive state unit that holds a value and notifies subscribers on updates.

@@ -1,4 +1,4 @@
-import type { PersistStorage } from '../types';
+import type { PersistStorage } from '@vegajs/vortex';
 
 export class IndexedDBAdapter implements PersistStorage {
   private readonly dbName: string;

@@ -1,4 +1,4 @@
-import { type PersistStorage } from '../types';
+import type { PersistStorage } from '../types';
 
 export class MemoryStorage implements PersistStorage {
   private store = new Map<string, unknown>();

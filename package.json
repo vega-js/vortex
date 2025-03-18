@@ -3,7 +3,8 @@
   "scripts": {
     "change": "changeset",
     "changeset": "changeset",
-    "build": "npm run build --workspaces --if-present",
+    "prebuild": "npm run build --workspace=@vegajs/vortex",
+    "build": "npm run prebuild && npm run build --workspaces --if-present",
     "build-storybook": "storybook build",
     "ci-publish": "npm run ci-publish --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
