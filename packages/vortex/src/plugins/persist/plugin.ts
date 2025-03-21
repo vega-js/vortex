@@ -129,8 +129,6 @@ export const persistPlugin = <T extends UnknownState>(
                 s[el].value = parsedValue;
               }
 
-              console.log(isQuery(s[el]));
-
               const query = s[el];
 
               if (isQuery(query)) {
