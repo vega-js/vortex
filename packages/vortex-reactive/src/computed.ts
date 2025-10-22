@@ -1,22 +1,22 @@
 /**
  * Perfect Reactivity - Computed
- * 
+ *
  * Derived reactive values that automatically update when dependencies change.
  */
 
-import type { ComputedNode, Link } from "./core";
+import type { ComputedNode, Link } from './core';
 import {
-    computedUpdate,
-    computedUpdateIfNecessary,
-    link,
-    trackingContext,
-} from "./core";
+  computedUpdate,
+  computedUpdateIfNecessary,
+  link,
+  trackingContext,
+} from './core';
 
 /**
  * Computed - derived reactive value with automatic dependency tracking
- * 
+ *
  * @template T - Value type
- * 
+ *
  * @example
  * ```ts
  * const count = signal(0);
@@ -29,13 +29,13 @@ import {
 export class IComputed<T = any> implements ComputedNode {
   fn: () => T;
   value: any;
-  flags: number = 0x1;
+  flags = 0x1;
   deps: Link | null = null;
   depsTail: Link | null = null;
   subs: Link | null = null;
   subsTail: Link | null = null;
-  version: number = 0;
-  lastCheckCycle: number = 0;
+  version = 0;
+  lastCheckCycle = 0;
 
   constructor(fn: () => T) {
     this.fn = fn;
@@ -44,9 +44,9 @@ export class IComputed<T = any> implements ComputedNode {
 
   /**
    * Read computed value and track dependency in current reactive context
-   * 
+   *
    * Lazily computes value only when accessed and dependencies have changed.
-   * 
+   *
    * @returns Current computed value
    */
   read(): T {
@@ -79,7 +79,7 @@ export class IComputed<T = any> implements ComputedNode {
 
   /**
    * Read value without tracking dependency or updating
-   * 
+   *
    * @returns Current cached value (may be stale)
    */
   peek(): T {
@@ -89,11 +89,11 @@ export class IComputed<T = any> implements ComputedNode {
 
 /**
  * Create a computed value with automatic dependency tracking
- * 
+ *
  * @template T - Value type
  * @param fn - Computation function
  * @returns Computed instance
- * 
+ *
  * @example
  * ```ts
  * const count = signal(0);
@@ -107,4 +107,3 @@ export function computed<T>(fn: () => T): IComputed<T> {
 
 // Type exports for compatibility
 export type { IComputed as ComputedOptions };
-

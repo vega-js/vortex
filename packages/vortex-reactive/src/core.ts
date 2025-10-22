@@ -33,7 +33,7 @@ let isPropagating = false;
 // ============================================================================
 // Utility Functions
 // ============================================================================
- 
+
 /**
  * Fast equality check with shallow array comparison
  * Enables avoidable optimization for common patterns
@@ -43,8 +43,8 @@ function fastEquals(a: any, b: any): boolean {
   if (a !== a) return b !== b; // NaN check
 
   const typeA = typeof a;
-  if (typeA !== "object" || a === null) return false;
-  if (typeof b !== "object" || b === null) return false;
+  if (typeA !== 'object' || a === null) return false;
+  if (typeof b !== 'object' || b === null) return false;
 
   // Deep equality for small arrays (≤10 elements)
   if (Array.isArray(a) && Array.isArray(b)) {
@@ -58,9 +58,9 @@ function fastEquals(a: any, b: any): boolean {
       if (ai === bi || (ai !== ai && bi !== bi)) continue;
 
       if (
-        typeof ai === "object" &&
+        typeof ai === 'object' &&
         ai !== null &&
-        typeof bi === "object" &&
+        typeof bi === 'object' &&
         bi !== null
       ) {
         const keysA = Object.keys(ai);
@@ -277,7 +277,7 @@ export function computedUpdateIfNecessary(node: ComputedNode): void {
   // Fast path: single clean signal dep
   if (
     !node.deps.nextDep &&
-    !("fn" in node.deps.dep!) &&
+    !('fn' in node.deps.dep!) &&
     node.deps.dep!.version === node.deps.version
   ) {
     node.flags &= ~0x1;
@@ -316,7 +316,7 @@ export function computedUpdateIfNecessary(node: ComputedNode): void {
       const dep = link.dep!;
 
       // Recursively check dirty computed deps
-      if (!checkedDep && "fn" in dep) {
+      if (!checkedDep && 'fn' in dep) {
         const compDep = dep as ComputedNode;
         if (
           compDep.flags & 0x1 &&
@@ -401,7 +401,9 @@ export function computedUpdate(node: ComputedNode): void {
   } finally {
     // Clean up unused deps after depsTail
     if (node.depsTail !== null) {
+      // @ts-ignore
       let link = node.depsTail.nextDep;
+      // @ts-ignore
       node.depsTail.nextDep = null;
       while (link) {
         const next = link.nextDep;
@@ -414,6 +416,7 @@ export function computedUpdate(node: ComputedNode): void {
       while (link) {
         const next = link.nextDep;
         removeLink(link);
+        // @ts-ignore
         link = next;
       }
       node.deps = null;
@@ -502,7 +505,9 @@ export function effectExecute(node: EffectNode): void {
   } finally {
     // Clean up unused deps
     if (node.depsTail !== null) {
+      // @ts-ignore
       let link = node.depsTail.nextDep;
+      // @ts-ignore
       node.depsTail.nextDep = null;
       while (link) {
         const next = link.nextDep;
@@ -510,8 +515,9 @@ export function effectExecute(node: EffectNode): void {
         link = next;
       }
     } else if (node.deps !== null) {
-      let link = node.deps;
+      let link: Link | null = node.deps;
       while (link) {
+        // @ts-ignore
         const next = link.nextDep;
         removeLink(link);
         link = next;
@@ -568,7 +574,7 @@ function propagateDeep(startLink: Link | null): void {
     const sub = link.sub!;
     const nextSibling = link.nextSub;
 
-    const hasValue = "value" in sub;
+    const hasValue = 'value' in sub;
 
     if (hasValue) {
       const computed = sub as ComputedNode;
@@ -595,7 +601,7 @@ function propagateDeep(startLink: Link | null): void {
  * Detect type by checking for 'value' field (computed has it, effect doesn't)
  */
 function notify(node: ComputedNode | EffectNode): void {
-  if ("value" in node) {
+  if ('value' in node) {
     computedNotify(node as ComputedNode);
   } else {
     effectNotify(node as EffectNode);
@@ -604,7 +610,7 @@ function notify(node: ComputedNode | EffectNode): void {
 
 export function link(
   dep: SignalNode | ComputedNode,
-  sub: ComputedNode | EffectNode
+  sub: ComputedNode | EffectNode,
 ): void {
   const version = dep.version;
   const prevDep = sub.depsTail;

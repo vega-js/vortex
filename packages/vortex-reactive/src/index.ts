@@ -1,52 +1,52 @@
 /**
  * Perfect Reactivity - Public API
- * 
+ *
  * High-performance fine-grained reactive system with excellent DX.
- * 
+ *
  * @packageDocumentation
- * 
+ *
  * @example
  * Basic usage:
  * ```ts
  * import { signal, computed, effect } from 'perfect-reactivity';
- * 
+ *
  * const count = signal(0);
  * const double = computed(() => count.read() * 2);
- * 
+ *
  * effect(() => {
  *   console.log('Double:', double.read());
  * });
- * 
+ *
  * count.write(5); // Logs: "Double: 10"
  * ```
  */
 
 // Core exports
-export { batch } from "./batch";
-export { computed } from "./computed";
-export type { ComputedOptions, IComputed } from "./computed";
-export { effect } from "./effect";
-export type { IEffect } from "./effect";
-export { signal } from "./signal";
-export type { ISignal } from "./signal";
+export { batch } from './batch';
+export { computed } from './computed';
+export type { ComputedOptions, IComputed } from './computed';
+export { effect } from './effect';
+export type { IEffect } from './effect';
+export { signal } from './signal';
+export type { ISignal } from './signal';
 
 // Utility types and helpers
-export { isComputed, isEffect, isSignal, reactiveObject } from "./types";
+export { isComputed, isEffect, isSignal, reactiveObject } from './types';
 export type {
-    ComputedValue,
-    Reactive,
-    ReactiveObject,
-    ReadonlyComputed,
-    ReadonlySignal,
-    SignalValue,
-    Unwrap
-} from "./types";
+  ComputedValue,
+  Reactive,
+  ReactiveObject,
+  ReadonlyComputed,
+  ReadonlySignal,
+  SignalValue,
+  Unwrap,
+} from './types';
 
-import { batch as withBatch } from "./batch";
-import { computed as createComputed } from "./computed";
-import { effect as createEffect } from "./effect";
+import { batch as withBatch } from './batch';
+import { computed as createComputed } from './computed';
+import { effect as createEffect } from './effect';
 // Re-export for convenience
-import { signal as createSignal } from "./signal";
+import { signal as createSignal } from './signal';
 
 /**
  * Perfect Reactivity System - Ultra-Optimized
