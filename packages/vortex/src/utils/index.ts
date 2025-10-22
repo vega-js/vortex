@@ -1,8 +1,6 @@
-import type { Computed, Query, Reactive } from '../types';
+import type { Computed, Mutation, Query, Reactive } from '../types';
 
-export * from './is-equal';
-
-export * from './shallow-equal';
+export * from './retry';
 
 export const toObjectKeys = <Obj extends Record<string, unknown>>(
   obj: Obj,
@@ -11,17 +9,23 @@ export const toObjectKeys = <Obj extends Record<string, unknown>>(
 };
 
 export const isReactive = (value: unknown): value is Reactive<unknown> => {
-  return (value as { type?: unknown })?.type === 'reactive';
+  return (value as { type?: unknown })?.type === '$$reactive';
 };
 
 export const isComputed = (value: unknown): value is Computed<unknown> => {
-  return (value as { type?: unknown })?.type === 'computed';
+  return (value as { type?: unknown })?.type === '$$computed';
 };
 
 export const isQuery = (
   value: unknown,
 ): value is Query<unknown, unknown, unknown> => {
-  return (value as { type?: unknown })?.type === 'query';
+  return (value as { type?: unknown })?.type === '$$query';
+};
+
+export const isMutation = (
+  value: unknown,
+): value is Mutation<unknown, unknown, unknown> => {
+  return (value as { type?: unknown })?.type === '$$mutation';
 };
 
 export const isReactiveUnit = (

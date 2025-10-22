@@ -1,29 +1,26 @@
+import { PERSIST_NAME } from '../../constants';
 import type {
   DefineApi,
   DefineStore,
+  MutationOptions,
   QueryOptions,
   Reactive,
   StoreOptions,
   UnwrappedState,
   WatchCallback,
 } from '../../types';
-import { isReactiveUnit, toObjectKeys } from '../../utils';
-import { BatchManager } from '../batch-manager';
-import { ComputedValue } from '../create-computed';
-import { Effect } from '../create-effect';
-import { QueryHandler } from '../create-query';
-import { ReactiveValue } from '../create-reactive';
-import { ReactiveContext } from '../reactive-context';
+import { isMutation, isReactiveUnit, toObjectKeys } from '../../utils';
+import {
+  MutationHandler,
+  QueryHandler,
+  batch,
+  computed,
+  effect,
+  reactive,
+} from '../reactive';
 import { initDevtoolsStore, observeStore } from './devtools-connection';
 
-class Store<
-  T extends Record<string, unknown>,
-  DIDeps extends Record<string, unknown> | undefined = undefined,
-> {
-  private batchManager = new BatchManager();
-
-  private localContext = new ReactiveContext();
-
+class Store<T extends Record<string, unknown>> {
   private listeners = new Map<number, WatchCallback<UnwrappedState<T>>>();
 
   private listenerCounter = 0;
@@ -38,62 +35,58 @@ class Store<
 
   private readonly name: string;
 
-  constructor(
-    setup: (args: DefineApi<DIDeps>) => T,
-    options: StoreOptions<T, DIDeps> = {},
-  ) {
-    const { plugins = [], DI, name = `unknown_${Date.now()}` } = options;
+  public isPersist = false;
+
+  constructor(setup: (args: DefineApi) => T, options: StoreOptions<T> = {}) {
+    const { plugins = [], name = `unknown_${Date.now()}` } = options;
 
     this.name = name;
 
     this.state = setup({
-      reactive: this.createReactive.bind(this),
-      computed: this.createComputed.bind(this),
-      effect: this.createEffect.bind(this),
+      reactive: reactive,
+      computed: computed,
+      effect: effect,
       query: this.createQuery.bind(this),
-      DI,
-    } as unknown as DefineApi<DIDeps>);
+      mutation: this.createMutation.bind(this),
+      batch: batch,
+    } as unknown as DefineApi);
 
     const stateKeys = toObjectKeys(this.state);
 
     this.stateKeys = stateKeys;
 
-    this.reactiveUnits = stateKeys.filter((key) =>
-      isReactiveUnit(this.state[key]),
+    this.reactiveUnits = stateKeys.filter(
+      (key) => isReactiveUnit(this.state[key]) || isMutation(this.state[key]),
     );
 
     this.prevState = this.getSnapshot();
     this.cleanupAll = this.observeReactivity();
-    plugins.forEach((plugin) => plugin(this.getStore()));
+
+    for (const plugin of plugins) {
+      plugin(this.getStore());
+
+      if (plugin.pluginName === PERSIST_NAME) {
+        this.isPersist = true;
+      }
+    }
 
     Promise.resolve().then(() => {
       initDevtoolsStore(this.name, this.prevState);
     });
   }
 
-  private createReactive<Value>(initialValue: Value): Reactive<Value> {
-    return new ReactiveValue(initialValue, this.localContext);
-  }
-
-  private createComputed<Value>(fn: () => Value) {
-    return new ComputedValue(fn, this.localContext);
-  }
-
-  private createEffect(fn: () => void) {
-    const effect = new Effect(fn, this.localContext);
-
-    return effect.stop.bind(effect);
-  }
-
   private createQuery<Data, TError, TOptions>(
     cb: (options: TOptions) => Promise<Data>,
     queryOptions?: QueryOptions<Data, TError>,
   ) {
-    return new QueryHandler<Data, TError, TOptions>(
-      cb,
-      this.localContext,
-      queryOptions,
-    );
+    return new QueryHandler<Data, TError, TOptions>(cb, queryOptions);
+  }
+
+  private createMutation<Data, TError, TOptions>(
+    cb: (options: TOptions) => Promise<Data>,
+    mutationOptions?: MutationOptions<Data, TError, TOptions>,
+  ) {
+    return new MutationHandler<Data, TError, TOptions>(cb, mutationOptions);
   }
 
   private getSnapshot(): UnwrappedState<T> {
@@ -106,6 +99,15 @@ class Store<
       newSnapshot[key] = isReactiveUnit(reactiveUnit)
         ? (reactiveUnit.value as UnwrappedState<T>[typeof key])
         : (reactiveUnit as UnwrappedState<T>[typeof key]);
+
+      if (isMutation(reactiveUnit)) {
+        newSnapshot[key] = {
+          ...reactiveUnit.state,
+          runSync: reactiveUnit.runSync,
+          runAsync: reactiveUnit.runAsync,
+          reset: reactiveUnit.reset,
+        } as UnwrappedState<T>[typeof key];
+      }
     }
 
     return newSnapshot;
@@ -115,11 +117,11 @@ class Store<
     newState: UnwrappedState<T>,
     oldState: UnwrappedState<T>,
   ) {
-    Promise.resolve().then(() => observeStore(newState, oldState, this.name));
     this.listeners.forEach((listener) => listener(newState, oldState));
+    Promise.resolve().then(() => observeStore(newState, oldState, this.name));
   }
 
-  isBatchScheduled = false;
+  private isBatchScheduled = false;
 
   private observeReactivity(): () => void {
     const unsubscribeFunctions: (() => void)[] = [];
@@ -130,7 +132,7 @@ class Store<
       if (!this.isBatchScheduled) {
         this.isBatchScheduled = true;
 
-        this.batchManager.addTask(() => {
+        Promise.resolve().then(() => {
           if (batchedState) {
             this.triggerWatchers(batchedState, this.prevState);
             this.prevState = batchedState;
@@ -151,7 +153,17 @@ class Store<
           batchedState = { ...this.prevState };
         }
 
-        batchedState[key] = value as UnwrappedState<T>[typeof key];
+        if (isMutation(this.state[key])) {
+          batchedState[key] = {
+            ...(value || {}),
+            runSync: this.state[key].runSync,
+            runAsync: this.state[key].runAsync,
+            reset: this.state[key].reset,
+          } as UnwrappedState<T>[typeof key];
+        } else {
+          batchedState[key] = value as UnwrappedState<T>[typeof key];
+        }
+
         triggerBatchUpdate();
       });
 
@@ -179,7 +191,10 @@ class Store<
     };
   }
 
-  public cleanupAll(): void {}
+  public cleanupAll(): void {
+    this.listenerCounter = 0;
+    this.listeners.clear();
+  }
 
   public getStore(): DefineStore<T> {
     return {
@@ -192,14 +207,42 @@ class Store<
   }
 }
 
-export const defineStore = <
-  T extends Record<string, unknown>,
-  DIDeps extends Record<string, unknown> | undefined = undefined,
->(
-  setup: (args: DefineApi<DIDeps>) => T,
-  options: StoreOptions<T, DIDeps> = {},
-): DefineStore<T> => {
-  const storeInstance = new Store(setup, options);
+function getLazy<T>(factory: () => T): () => T {
+  let instance: T | null = null;
 
-  return storeInstance.getStore();
-};
+  return () => {
+    if (instance === null) {
+      instance = factory();
+    }
+
+    return instance;
+  };
+}
+
+export function defineStore<T extends Record<string, unknown>>(
+  setup: (args: DefineApi) => T,
+  options?: StoreOptions<T>,
+): DefineStore<T> {
+  return new Store(setup, options).getStore();
+}
+
+export function defineLazyStore<T extends Record<string, unknown>>(
+  setup: (args: DefineApi) => T,
+  options?: StoreOptions<T> & {
+    singleton?: boolean;
+  },
+): () => DefineStore<T> {
+  let storeInstance: DefineStore<T> | null;
+
+  return getLazy(() => {
+    if (options?.singleton) {
+      if (!storeInstance) {
+        storeInstance = new Store(setup, options).getStore();
+      }
+
+      return storeInstance;
+    }
+
+    return new Store(setup, options).getStore();
+  });
+}

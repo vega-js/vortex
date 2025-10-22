@@ -1,0 +1,53 @@
+{
+  "name": "@vegajs/vortex-web",
+  "version": "0.0.0",
+  "description": "🌀 Utility functions for using Vortex in web environments.",
+  "keywords": [
+    "state management",
+    "web",
+    "utilities",
+    "store",
+    "reactive",
+    "dependency injection",
+    "react",
+    "flux"
+  ],
+  "homepage": "https://docs-vortex.netlify.app",
+  "bugs": {
+    "url": "https://github.com/vega-js/vortex/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vega-js/vortex",
+    "directory": "packages/vortex-web"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "author": "Andrey Zlobin",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "rslib build",
+    "build:watch": "rslib build -w",
+    "ci-publish": "npm publish --access public",
+    "eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx . --config .eslintrc",
+    "lint": "npm run eslint && npm run typecheck",
+    "lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx . --fix --config .eslintrc --quiet",
+    "test": "vitest run",
+    "test:ci": "vitest run --reporter=junit --outputFile.junit=junit.xml",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@vegajs/vortex": "*"
+  }
+}

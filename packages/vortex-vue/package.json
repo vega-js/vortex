@@ -1,0 +1,61 @@
+{
+  "name": "@vegajs/vortex-vue",
+  "version": "0.0.0",
+  "description": "🌀 Vue bindings for Vortex, a next-gen state management library.",
+  "keywords": [
+    "state management",
+    "vue",
+    "hooks",
+    "context",
+    "store",
+    "reactive",
+    "flux"
+  ],
+  "homepage": "https://docs-vortex.netlify.app",
+  "bugs": {
+    "url": "https://github.com/vega-js/vortex/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vega-js/vortex",
+    "directory": "packages/vortex"
+  },
+  "sideEffects": false,
+  "license": "MIT",
+  "author": "Andrey Zlobin",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "rslib  build",
+    "build:watch": "rslib  build -w",
+    "ci-publish": "npm publish --access public",
+    "eslint": "eslint --cache --ext .js,.jsx,.ts,.tsx . --config .eslintrc",
+    "lint": "npm run eslint && npm run typecheck",
+    "lint:fix": "eslint --cache --ext .js,.jsx,.ts,.tsx  . --fix --config .eslintrc --quiet",
+    "tests": "vitest run",
+    "tests:ci": "vitest run --reporter=junit --outputFile.junit=junit.xml",
+    "tests:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "vue": "3.5.13"
+  },
+  "peerDependencies": {
+    "@vegajs/vortex": "*",
+    "vue": ">=3.x.x"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    }
+  }
+}
