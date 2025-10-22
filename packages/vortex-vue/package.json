@@ -1,18 +1,14 @@
 {
-  "name": "@vegajs/vortex",
+  "name": "@vegajs/vortex-vue",
   "version": "0.0.0",
-  "description": "🌀 A next-gen, lightweight state management library for JavaScript and TypeScript.",
+  "description": "🌀 Vue bindings for Vortex, a next-gen state management library.",
   "keywords": [
     "state management",
-    "state",
-    "manager",
-    "management",
-    "redux",
+    "vue",
+    "hooks",
+    "context",
     "store",
     "reactive",
-    "dependency injection",
-    "react",
-    "state",
     "flux"
   ],
   "homepage": "https://docs-vortex.netlify.app",
@@ -35,11 +31,6 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js",
       "types": "./dist/index.d.ts"
-    },
-    "./plugins": {
-      "import": "./dist/plugins/index.mjs",
-      "require": "./dist/plugins/index.js",
-      "types": "./dist/plugins/index.d.ts"
     }
   },
   "files": ["dist", "README.md"],
@@ -55,7 +46,16 @@
     "tests:watch": "vitest",
     "typecheck": "tsc --noEmit"
   },
+  "devDependencies": {
+    "vue": "3.5.13"
+  },
   "peerDependencies": {
-    "alien-signals": ">=2.0.7"
+    "@vegajs/vortex": "*",
+    "vue": ">=3.x.x"
+  },
+  "peerDependenciesMeta": {
+    "vue": {
+      "optional": true
+    }
   }
 }

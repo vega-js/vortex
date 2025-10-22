@@ -1,0 +1,1 @@
+export function createStore<T extends Record<string, unknown>, D extends object>(deps: D, setup: (api: DefineApi & D) => T, options?: StoreOptions<T> & { singleton?: boolean }) { return defineLazyStore((api) => setup({ ...api, ...deps }), options); }

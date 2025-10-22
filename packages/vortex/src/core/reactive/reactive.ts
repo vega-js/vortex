@@ -1,9 +1,11 @@
 import {
-  type Dependency,
-  type Link,
-  type Subscriber,
-  SubscriberFlags,
-  createReactiveSystem,
+  computed as alienComputed,
+  effect as alienEffect,
+  signal as alienSignal,
+  endBatch,
+  getCurrentSub,
+  setCurrentSub,
+  startBatch
 } from 'alien-signals';
 import type {
   Mutation,
@@ -15,196 +17,74 @@ import type {
 } from '../../types';
 import { type RetryOptions, retry } from '../../utils';
 
-const {
-  link,
-  propagate,
-  endTracking,
-  startTracking,
-  updateDirtyFlag,
-  processComputedUpdate,
-  processEffectNotifications,
-} = createReactiveSystem({
-  updateComputed(cmt: Computed) {
-    return cmt.update();
-  },
-  notifyEffect(eff: Effect) {
-    eff.notify();
-
-    return true;
-  },
-});
-
-let activeSub: Subscriber | undefined = undefined;
-let batchDepth = 0;
-
-export class Effect<T = unknown> implements Subscriber {
-  // Subscriber fields
-  deps: Link | undefined = undefined;
-
-  depsTail: Link | undefined = undefined;
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  flags: SubscriberFlags = SubscriberFlags.Effect;
+export class Effect<T = unknown> {
+  private stopFn: (() => void) | undefined;
 
   constructor(public fn: () => T) {}
 
-  notify(): void {
-    const flags = this.flags;
-
-    if (
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      flags & SubscriberFlags.Dirty ||
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      (flags & SubscriberFlags.PendingComputed && updateDirtyFlag(this, flags))
-    ) {
-      this.run();
-    }
-  }
-
   run(): T {
-    const prevSub = activeSub;
-
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    activeSub = this;
-    startTracking(this);
-
+    const prevSub = getCurrentSub();
+    setCurrentSub(this as any);
+    
     try {
       return this.fn();
     } finally {
-      activeSub = prevSub;
-      endTracking(this);
+      setCurrentSub(prevSub);
     }
+  }
+
+  start(): T {
+    this.stopFn = alienEffect(() => this.fn());
+    return this.run();
   }
 
   stop(): void {
-    startTracking(this);
-    endTracking(this);
+    if (this.stopFn) {
+      this.stopFn();
+      this.stopFn = undefined;
+    }
   }
 }
 
-function startBatch(): void {
-  ++batchDepth;
-}
-
-function endBatch(): void {
-  if (!--batchDepth) {
-    processEffectNotifications();
-  }
-}
-
-export class Reactive<T = unknown> implements Dependency {
+export class Reactive<T = unknown> {
   public type = '$$reactive';
+  private signal: () => T;
+  private setter: (value: T) => void;
 
-  // Dependency fields
-  subs: Link | undefined = undefined;
-
-  subsTail: Link | undefined = undefined;
-
-  constructor(public currentValue: T) {}
+  constructor(public currentValue: T) {
+    const signalFn = alienSignal(currentValue);
+    this.signal = signalFn;
+    this.setter = signalFn;
+  }
 
   get value(): T {
-    if (activeSub !== undefined) {
-      link(this, activeSub);
-    }
-
-    return this.currentValue;
+    return this.signal();
   }
 
   set value(value: T) {
-    if (this.currentValue !== value) {
-      this.currentValue = value;
-
-      const subs = this.subs;
-
-      if (subs !== undefined) {
-        propagate(subs);
-
-        if (!batchDepth) {
-          processEffectNotifications();
-        }
-      }
-    }
+    this.setter(value);
+    this.currentValue = value;
   }
 
   subscribe(callback: (value: T) => void) {
-    const effectInst = new Effect(() => callback(this.value));
-
-    effectInst.run();
-
-    return () => effectInst.stop();
+    return alienEffect(() => callback(this.value));
   }
 }
 
-export class Computed<T = unknown> implements Subscriber, Dependency {
+export class Computed<T = unknown> {
   public type = '$$computed';
+  private computed: () => T;
 
-  currentValue: T | undefined = undefined;
-
-  // Dependency fields
-  subs: Link | undefined = undefined;
-
-  subsTail: Link | undefined = undefined;
-
-  // Subscriber fields
-  deps: Link | undefined = undefined;
-
-  depsTail: Link | undefined = undefined;
-
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  flags: SubscriberFlags = SubscriberFlags.Computed | SubscriberFlags.Dirty;
-
-  constructor(public getter: () => T) {}
-
-  get value(): T {
-    const flags = this.flags;
-
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    if (flags & (SubscriberFlags.PendingComputed | SubscriberFlags.Dirty)) {
-      processComputedUpdate(this, flags);
-    }
-
-    if (activeSub !== undefined) {
-      link(this, activeSub);
-    }
-
-    return this.currentValue!;
+  constructor(public getter: () => T) {
+    this.computed = alienComputed(this.getter);
   }
 
-  update(): boolean {
-    const prevSub = activeSub;
-
-    // eslint-disable-next-line @typescript-eslint/no-this-alias
-    activeSub = this;
-    startTracking(this);
-
-    try {
-      const oldValue = this.currentValue;
-      const newValue = this.getter();
-
-      if (oldValue !== newValue) {
-        this.currentValue = newValue;
-
-        return true;
-      }
-
-      return false;
-    } finally {
-      activeSub = prevSub;
-      endTracking(this);
-    }
+  get value(): T {
+    return this.computed();
   }
 
   subscribe(callback: (value: T) => void) {
-    const effectInst = new Effect(() => callback(this.value));
-
-    effectInst.run();
-
-    return () => effectInst.stop();
+    return alienEffect(() => callback(this.value));
   }
 }
 
@@ -544,12 +424,13 @@ class ReactiveArray<T> {
 
       set(target, prop, value, receiver) {
         const index = Number(prop);
+        let reactiveValue = value;
 
         if (!Number.isNaN(index)) {
-          value = self.makeReactive(value as T);
+          reactiveValue = self.makeReactive(value as T);
         }
 
-        const result = Reflect.set(target, prop, value, receiver);
+        const result = Reflect.set(target, prop, reactiveValue, receiver);
 
         self.updateCallback();
 
@@ -577,7 +458,7 @@ class DeepReactive<T = unknown | UnknownReactivity> {
   constructor(initialValue: T) {
     this.reactive = new Reactive({
       inner: this.makeReactive(initialValue),
-    }) as Reactive<{ inner: T }>;
+    });
   }
 
   private makeReactive(value: T): T {
@@ -640,15 +521,13 @@ class DeepReactive<T = unknown | UnknownReactivity> {
   }
 
   private makeReactiveProperty(target: T & object, prop: keyof T) {
-    let value = target[prop] as T;
-
-    value = this.makeReactive(value);
+    let reactiveValue = this.makeReactive(target[prop] as T);
 
     Object.defineProperty(target, prop, {
-      get: () => value,
+      get: () => reactiveValue,
       set: (newValue) => {
-        if (newValue !== value) {
-          value = this.makeReactive(newValue);
+        if (newValue !== reactiveValue) {
+          reactiveValue = this.makeReactive(newValue);
         }
       },
       configurable: true,
@@ -716,17 +595,7 @@ export function reactive<T>(oldValue?: T): Reactive<T | undefined> {
  * @returns {() => void} A function to stop the effect.
  */
 export function effect<T>(fn: () => T) {
-  const e = new Effect(fn);
-
-  const cb = e.run();
-
-  return () => {
-    if (cb !== undefined && typeof cb === 'function') {
-      cb();
-    }
-
-    e.stop();
-  };
+  return alienEffect(fn);
 }
 
 export function deepReactive<T>(): DeepReactive<T | undefined>;
